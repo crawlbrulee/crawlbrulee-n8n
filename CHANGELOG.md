@@ -1,0 +1,13 @@
+# changelog
+
+all notable changes to `n8n-nodes-crawlbrulee` are documented here.
+
+this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
+
+## 0.1.0 (unreleased)
+
+### added
+
+- the **Crawlbrulee** node: Scrape, Scrape (Async), Get Scrape Status, Get Scrape Result, Map, Get Usage, Whoami. optional screenshot download into binary data. usable as an AI Agent tool.
+- the **Crawlbrulee Trigger** node: fires on `scrape.complete` deliveries, verifies the signature when a signing secret is set, drops repeats of the same event, and can fetch the result in the same step.
+- the **Crawlbrulee API** credential with a zero-cost whoami test.
