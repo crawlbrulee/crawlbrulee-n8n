@@ -33,4 +33,12 @@ export const jobFields: INodeProperties[] = [
 		description: 'The job ID returned by Scrape (Async)',
 		displayOptions: { show: { resource: ['job'], operation: ['getScrapeStatus', 'getScrapeResult'] } },
 	},
+	{
+		displayName: 'Download Screenshot',
+		name: 'downloadScreenshot',
+		type: 'boolean',
+		default: false,
+		description: 'Whether to download the screenshot (and its slices) into binary data when the result has one',
+		displayOptions: { show: { resource: ['job'], operation: ['getScrapeResult'] } },
+	},
 ];

@@ -41,11 +41,12 @@ export class Crawlbrulee implements INodeType {
 				const item = await runOperation.call(this, resource, operation, i);
 				returnData.push({ ...item, pairedItem: { item: i } });
 			} catch (error) {
+				const failure = asNodeError(this.getNode(), error, i);
 				if (this.continueOnFail()) {
-					returnData.push({ json: { error: (error as Error).message }, pairedItem: { item: i } });
+					returnData.push({ json: { error: failure.message }, pairedItem: { item: i } });
 					continue;
 				}
-				throw asNodeError(this.getNode(), error, i);
+				throw failure;
 			}
 		}
 		return [returnData];

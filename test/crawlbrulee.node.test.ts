@@ -70,6 +70,29 @@ describe('Crawlbrulee node', () => {
 		expect(out[0].binary).toHaveProperty('screenshot');
 	});
 
+	it('attaches binary on a job result when Download Screenshot is on', async () => {
+		const { self } = ctx(
+			{ resource: 'job', operation: 'getScrapeResult', jobId: 'j', downloadScreenshot: true },
+			{ statusCode: 200, body: { screenshot: { url: 'https://cdn/b.png', type: 'viewport', properties: { file_name: 'b.png', mime: 'image/png', width: 1, height: 1, viewport: { width: 1, height: 1, device_scale_factor: 1 } } } } },
+		);
+		const [out] = await node.execute.call(self);
+		expect(out[0].binary).toHaveProperty('screenshot');
+	});
+
+	it('runs every input item and pairs each failure with its own index', async () => {
+		const { self } = ctx(
+			{ resource: 'account', operation: 'whoami' },
+			{ statusCode: 401, body: { name: 'invalid_credentials', message: 'nope' } },
+			2,
+			true,
+		);
+		const [out] = await node.execute.call(self);
+		expect(out).toHaveLength(2);
+		expect(out[0].json.error).toMatch(/rejected the API key/);
+		expect(out[1].json.error).toMatch(/rejected the API key/);
+		expect(out.map((item) => item.pairedItem)).toEqual([{ item: 0 }, { item: 1 }]);
+	});
+
 	it('throws the mapped api error, or records it with continueOnFail', async () => {
 		const params = { resource: 'account', operation: 'whoami' };
 		const bad = { statusCode: 401, body: { name: 'invalid_credentials', message: 'nope' } };

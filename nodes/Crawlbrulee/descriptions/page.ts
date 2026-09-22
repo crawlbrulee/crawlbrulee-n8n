@@ -161,7 +161,9 @@ export const pageFields: INodeProperties[] = [
 		type: 'boolean',
 		default: false,
 		description: 'Whether to download the screenshot (and its slices) into binary data on the item',
-		displayOptions: { show: screenshotShow },
+		// Only the sync scrape returns an image; an async submit returns a job id, so the job
+		// resource has its own Download Screenshot field for Get Scrape Result.
+		displayOptions: { show: { resource: ['page'], operation: ['scrape'], screenshotType: ['full_page', 'viewport'] } },
 	},
 	{
 		displayName: 'Options',

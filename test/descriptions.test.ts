@@ -28,7 +28,16 @@ describe('crawlbrulee node properties', () => {
 
 	it('shows screenshot options only when a screenshot type is chosen', () => {
 		expect(find('screenshotOptions')[0].displayOptions?.show?.screenshotType).toEqual(['full_page', 'viewport']);
-		expect(find('downloadScreenshot')[0].displayOptions?.show?.screenshotType).toEqual(['full_page', 'viewport']);
+		const pageDownload = find('downloadScreenshot', (p) => p.displayOptions?.show?.resource?.includes('page') === true)[0];
+		expect(pageDownload.displayOptions?.show?.operation).toEqual(['scrape']);
+		expect(pageDownload.displayOptions?.show?.screenshotType).toEqual(['full_page', 'viewport']);
+	});
+
+	it('offers the screenshot download on job results too', () => {
+		const jobDownload = find('downloadScreenshot', (p) => p.displayOptions?.show?.resource?.includes('job') === true)[0];
+		expect(jobDownload).toBeDefined();
+		expect(jobDownload.displayOptions?.show?.operation).toEqual(['getScrapeResult']);
+		expect(jobDownload.default).toBe(false);
 	});
 
 	it('has a job id field for both job operations', () => {
