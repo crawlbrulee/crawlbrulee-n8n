@@ -1,20 +1,33 @@
-// Refuses a bad npm tarball. Reads `npm pack --dry-run --json` on stdin:
+// Refuses a bad npm tarball.
 //
-//   npm pack --dry-run --json | node scripts/check-tarball.mjs
+//   node scripts/check-tarball.mjs
 //
 // Both ci.yml and publish.yml call it, so the two gates cannot drift apart.
+// It packs the real tarball and reads its contents, rather than parsing
+// `npm pack --json`: that output has changed shape three times across npm
+// releases (array, bare object, object keyed by package name), and the
+// workflows do not all run the same npm.
 // Not shipped: `files` in package.json is ["dist"].
-import { readFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
+import { rmSync } from 'node:fs';
 
-// npm 11.9 prints a one-element array; newer npm prints the object on its own.
-// Accept both, and fail closed on anything else — this is a gate, not a hint.
-const raw = JSON.parse(readFileSync(0, 'utf8'));
-const pkg = Array.isArray(raw) ? raw[0] : raw;
-if (!pkg || !Array.isArray(pkg.files)) {
-	console.error('could not read a file list from `npm pack --json`; got:', Object.keys(pkg ?? {}));
+const npm = process.platform === 'win32' ? 'npm.cmd' : 'npm';
+const out = execFileSync(npm, ['pack', '--silent'], { encoding: 'utf8' }).trim();
+const tarball = out.split('\n').filter(Boolean).pop();
+if (!tarball || !tarball.endsWith('.tgz')) {
+	console.error('npm pack did not name a tarball; got:', JSON.stringify(out));
 	process.exit(1);
 }
-const paths = pkg.files.map((f) => f.path);
+
+let paths;
+try {
+	paths = execFileSync('tar', ['-tzf', tarball], { encoding: 'utf8' })
+		.split('\n')
+		.filter((line) => line && !line.endsWith('/'))
+		.map((line) => line.replace(/^package\//, ''));
+} finally {
+	rmSync(tarball, { force: true });
+}
 
 const allowed = /^(dist\/|README\.md$|LICENSE$|package\.json$)/;
 // build leftovers that would otherwise slip through the dist/ prefix
@@ -31,3 +44,5 @@ if (js.length < 10) {
 	console.error('tarball is missing built code, only:', js);
 	process.exit(1);
 }
+
+console.log(`tarball ok: ${paths.length} files, ${js.length} js`);

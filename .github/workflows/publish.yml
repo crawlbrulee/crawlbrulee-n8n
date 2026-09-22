@@ -70,7 +70,7 @@ jobs:
         run: pnpm verify
 
       - name: Tarball holds only dist, README and LICENSE
-        run: npm pack --dry-run --json | node scripts/check-tarball.mjs
+        run: node scripts/check-tarball.mjs
 
       - name: Publish to npm
         # No NODE_AUTH_TOKEN: npm >= 11.5 performs OIDC token exchange via the
