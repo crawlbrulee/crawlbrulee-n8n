@@ -37,11 +37,17 @@ jobs:
         with:
           node-version: 24
           cache: pnpm
-          # Deliberately NO registry-url: it makes setup-node write an .npmrc
-          # and set NODE_AUTH_TOKEN to a dummy placeholder, which npm then sends
-          # as a (bogus) auth token instead of performing the OIDC trusted-
-          # publishing exchange. Without it, npm >= 11.5 + id-token: write does
-          # OIDC automatically against the default registry.npmjs.org.
+          # TEMPORARY (bootstrap publish of 0.1.0 only). npm will not let you
+          # configure a trusted publisher for a package name that does not exist
+          # yet, so the first release authenticates with a short-lived granular
+          # token. registry-url makes setup-node write the .npmrc that picks up
+          # NODE_AUTH_TOKEN. Provenance is unaffected: it comes from the
+          # workflow's OIDC identity, not from how npm authenticates.
+          #
+          # REVERT THIS (and the NODE_AUTH_TOKEN below) once the trusted
+          # publisher is configured: without registry-url, npm >= 11.5 plus
+          # id-token: write does the OIDC exchange on its own.
+          registry-url: https://registry.npmjs.org
 
       - name: Verify tagged commit is on main
         run: |
@@ -86,6 +92,9 @@ jobs:
         # source). n8n also requires provenance for community nodes.
         env:
           RELEASE_MODE: 'true'
+          # TEMPORARY: bootstrap token for the first publish. Remove with the
+          # registry-url above once the trusted publisher exists.
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish --access public --provenance
 
       - name: Create GitHub Release
