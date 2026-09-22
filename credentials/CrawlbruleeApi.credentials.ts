@@ -55,7 +55,8 @@ export class CrawlbruleeApi implements ICredentialType {
 
 	test: ICredentialTestRequest = {
 		request: {
-			baseURL: '={{$credentials.baseUrl}}',
+			// Same fallback the node uses, so a blank Base URL still tests production
+			baseURL: '={{$credentials.baseUrl || "https://api.crawlbrulee.com"}}',
 			url: '/api/whoami',
 		},
 	};

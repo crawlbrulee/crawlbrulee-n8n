@@ -39,7 +39,8 @@ export function buildMapBody(_node: INode, _itemIndex: number, p: MapParams): Ma
 
 	const maxAge = parseCacheMaxAge(o.cacheMaxAge);
 	if (maxAge !== undefined) body.cache = { max_age: maxAge };
-	if (isSet(o.country)) body.location = { country: String(o.country).trim() };
+	const country = String(o.country ?? '').trim();
+	if (country !== '') body.location = { country };
 
 	return body;
 }

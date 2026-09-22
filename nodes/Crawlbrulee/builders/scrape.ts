@@ -139,8 +139,10 @@ export function buildScrapeBody(node: INode, itemIndex: number, p: ScrapeParams)
 	if (maxAge !== undefined) body.cache = { max_age: maxAge };
 
 	const location: ScrapeLocation = {};
-	if (isSet(o.locale)) location.locale = String(o.locale).trim();
-	if (isSet(o.country)) location.country = String(o.country).trim();
+	const locale = String(o.locale ?? '').trim();
+	const country = String(o.country ?? '').trim();
+	if (locale !== '') location.locale = locale;
+	if (country !== '') location.country = country;
 	if (Object.keys(location).length > 0) body.location = location;
 
 	return body;

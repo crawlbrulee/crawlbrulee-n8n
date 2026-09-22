@@ -69,6 +69,11 @@ describe('buildScrapeBody', () => {
 		expect(body.location).toEqual({ locale: 'de-DE', country: 'de' });
 	});
 
+	it('treats whitespace-only locale and country as unset', () => {
+		const body = buildScrapeBody(node, 0, base({ options: { locale: '  ', country: '\t' } }));
+		expect(body).not.toHaveProperty('location');
+	});
+
 	it('passes an ISO cache cutoff as a string', () => {
 		expect(
 			buildScrapeBody(node, 0, base({ options: { cacheMaxAge: '2026-09-01T00:00:00Z' } })).cache,

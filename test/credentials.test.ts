@@ -20,7 +20,9 @@ describe('CrawlbruleeApi credential', () => {
 		expect(cred.authenticate.properties.headers?.Authorization).toBe(
 			'=Bearer {{$credentials.apiKey}}',
 		);
-		expect(cred.test.request.baseURL).toBe('={{$credentials.baseUrl}}');
+		expect(cred.test.request.baseURL).toBe(
+			'={{$credentials.baseUrl || "https://api.crawlbrulee.com"}}',
+		);
 		expect(cred.test.request.url).toBe('/api/whoami');
 	});
 });

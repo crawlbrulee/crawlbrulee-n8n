@@ -198,6 +198,19 @@ describe('Crawlbrulee node', () => {
 		expect(out[0].pairedItem).toEqual({ item: 0 });
 	});
 
+	it('asks for a Job ID when the field is blank or whitespace', async () => {
+		for (const operation of ['getScrapeStatus', 'getScrapeResult']) {
+			for (const jobId of ['', '   ']) {
+				const { self, httpRequestWithAuthentication } = ctx(
+					{ resource: 'job', operation, jobId },
+					{ statusCode: 200, body: {} },
+				);
+				await expect(node.execute.call(self)).rejects.toThrow(/Job ID is required/);
+				expect(httpRequestWithAuthentication).not.toHaveBeenCalled();
+			}
+		}
+	});
+
 	it('rejects an unknown operation', async () => {
 		await expect(
 			node.execute.call(

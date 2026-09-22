@@ -84,6 +84,18 @@ function scrapeParams(this: IExecuteFunctions, i: number): ScrapeParams {
 	};
 }
 
+/** The path segment for a job operation. Blank is a user mistake, not an api call. */
+function jobIdSegment(node: INode, raw: unknown, itemIndex: number): string {
+	const jobId = String(raw ?? '').trim();
+	if (jobId === '') {
+		throw new NodeOperationError(node, 'Job ID is required', {
+			itemIndex,
+			description: 'Set the Job ID field to the id returned by Scrape (Async).',
+		});
+	}
+	return encodeURIComponent(jobId);
+}
+
 async function scrapeAndMaybeDownload(
 	this: IExecuteFunctions,
 	i: number,
@@ -130,7 +142,7 @@ async function runOperation(
 			};
 		}
 		case 'job:getScrapeStatus': {
-			const jobId = encodeURIComponent((this.getNodeParameter('jobId', i) as string).trim());
+			const jobId = jobIdSegment(node, this.getNodeParameter('jobId', i), i);
 			return {
 				json: await crawlbruleeRequest.call(this, {
 					method: 'GET',
@@ -140,7 +152,7 @@ async function runOperation(
 			};
 		}
 		case 'job:getScrapeResult': {
-			const jobId = encodeURIComponent((this.getNodeParameter('jobId', i) as string).trim());
+			const jobId = jobIdSegment(node, this.getNodeParameter('jobId', i), i);
 			const json = await crawlbruleeRequest.call(this, {
 				method: 'GET',
 				path: `/api/scrape/result/${jobId}`,

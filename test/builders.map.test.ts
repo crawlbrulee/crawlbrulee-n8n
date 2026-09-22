@@ -46,6 +46,12 @@ describe('buildMapBody', () => {
 		});
 	});
 
+	it('treats a whitespace-only country as unset', () => {
+		expect(buildMapBody(node, 0, { url: 'https://x', options: { country: '  ' } })).toEqual({
+			url: 'https://x',
+		});
+	});
+
 	it('does not send sitemap_only: false', () => {
 		expect(buildMapBody(node, 0, { url: 'https://x', options: { sitemapOnly: false } })).toEqual({
 			url: 'https://x',
