@@ -20,7 +20,7 @@ export class Crawlbrulee implements INodeType {
 		icon: 'file:crawlbrulee.svg',
 		group: ['transform'],
 		version: 1,
-		subtitle: '={{ $parameter["operation"] + ": " + $parameter["resource"] }}',
+		subtitle: '={{ $parameter["operation"] }}',
 		description:
 			"Scrape any URL to Markdown, HTML, links, images, metadata or a screenshot, and map a site's URLs",
 		defaults: { name: 'crawlbrulee' },

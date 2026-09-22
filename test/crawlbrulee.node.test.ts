@@ -45,9 +45,7 @@ describe('Crawlbrulee node', () => {
 		expect(node.description.name).toBe('crawlbrulee');
 		expect(node.description.usableAsTool).toBe(true);
 		expect(node.description.credentials).toEqual([{ name: 'crawlbruleeApi', required: true }]);
-		expect(node.description.subtitle).toBe(
-			'={{ $parameter["operation"] + ": " + $parameter["resource"] }}',
-		);
+		expect(node.description.subtitle).toBe('={{ $parameter["operation"] }}');
 	});
 
 	it('scrapes a page and returns the body with pairedItem', async () => {
