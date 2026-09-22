@@ -6,7 +6,14 @@
 // Not shipped: `files` in package.json is ["dist"].
 import { readFileSync } from 'node:fs';
 
-const [pkg] = JSON.parse(readFileSync(0, 'utf8'));
+// npm 11.9 prints a one-element array; newer npm prints the object on its own.
+// Accept both, and fail closed on anything else — this is a gate, not a hint.
+const raw = JSON.parse(readFileSync(0, 'utf8'));
+const pkg = Array.isArray(raw) ? raw[0] : raw;
+if (!pkg || !Array.isArray(pkg.files)) {
+	console.error('could not read a file list from `npm pack --json`; got:', Object.keys(pkg ?? {}));
+	process.exit(1);
+}
 const paths = pkg.files.map((f) => f.path);
 
 const allowed = /^(dist\/|README\.md$|LICENSE$|package\.json$)/;
