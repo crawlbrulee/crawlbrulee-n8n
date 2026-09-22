@@ -64,14 +64,28 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Verify (lint, format, typecheck, test, build)
+        # Also the only step that fills dist/, which is git-ignored and is the
+        # single entry in package.json "files".
+        run: pnpm verify
+
+      - name: Tarball holds only dist, README and LICENSE
+        run: npm pack --dry-run --json | node scripts/check-tarball.mjs
+
       - name: Publish to npm
         # No NODE_AUTH_TOKEN: npm >= 11.5 performs OIDC token exchange via the
-        # trusted publisher configured for this repo on npmjs.com. prepublishOnly
-        # (n8n-node prerelease) runs before packing.
+        # trusted publisher configured for this repo on npmjs.com.
+        #
+        # RELEASE_MODE: prepublishOnly is `n8n-node prerelease`, which exits 1
+        # unless that variable is set — the n8n CLI wants you to publish with
+        # `n8n-node release`. We publish with plain `npm publish` + OIDC like the
+        # other crawlbrulee packages, so we set it and let the check pass.
         #
         # --provenance: this repo is public, so npm can generate a provenance
         # attestation (it verifies the Sigstore bundle against publicly visible
         # source). n8n also requires provenance for community nodes.
+        env:
+          RELEASE_MODE: 'true'
         run: npm publish --access public --provenance
 
       - name: Create GitHub Release
