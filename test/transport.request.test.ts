@@ -40,7 +40,19 @@ describe('crawlbruleeRequest', () => {
 		const { self } = ctx({ statusCode: 429, body: { name: 'too_many_requests', message: 'x', details: { retry_after_ms: 10 } } });
 		await expect(
 			crawlbruleeRequest.call(self, { method: 'GET', path: '/api/usage', itemIndex: 3 }),
-		).rejects.toMatchObject({ message: 'Crawlbrulee rate limit reached. Retry after 10 ms.', httpCode: '429' });
+		).rejects.toMatchObject({
+			message: 'Crawlbrulee rate limit reached. Retry after 10 ms.',
+			httpCode: '429',
+			context: { itemIndex: 3 },
+		});
 		await expect(crawlbruleeRequest.call(self, { method: 'GET', path: '/api/usage' })).rejects.toBeInstanceOf(NodeApiError);
+	});
+
+	it('falls back to the default base url when the credential base url is blank', async () => {
+		const { self, httpRequestWithAuthentication } = ctx({ statusCode: 200, body: {} }, '');
+		await crawlbruleeRequest.call(self, { method: 'GET', path: '/api/usage' });
+		expect(httpRequestWithAuthentication.mock.calls[0][1]).toMatchObject({
+			url: 'https://api.crawlbrulee.com/api/usage',
+		});
 	});
 });
