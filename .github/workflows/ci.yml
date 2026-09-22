@@ -39,6 +39,10 @@ jobs:
         run: |
           npm pack --dry-run --json | node -e '
             const [pkg] = JSON.parse(require("fs").readFileSync(0, "utf8"));
-            const bad = pkg.files.map(f => f.path).filter(p => !/^(dist\/|README\.md$|LICENSE$|package\.json$)/.test(p));
+            const paths = pkg.files.map(f => f.path);
+            const allowed = /^(dist\/|README\.md$|LICENSE$|package\.json$)/;
+            // build leftovers that would otherwise slip through the dist/ prefix
+            const banned = /(\.tsbuildinfo$|\.d\.ts$|\.js\.map$|^dist\/package\.json$)/;
+            const bad = paths.filter((p) => !allowed.test(p) || banned.test(p));
             if (bad.length) { console.error("unexpected files in tarball:", bad); process.exit(1); }
           '

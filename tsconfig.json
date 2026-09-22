@@ -17,10 +17,11 @@
 		"esModuleInterop": true,
 		"resolveJsonModule": true,
 		"incremental": true,
-		"declaration": true,
-		"sourceMap": true,
+		"tsBuildInfoFile": "./node_modules/.cache/tsconfig.tsbuildinfo",
+		"declaration": false,
+		"sourceMap": false,
 		"skipLibCheck": true,
 		"outDir": "./dist/"
 	},
-	"include": ["credentials/**/*", "nodes/**/*", "nodes/**/*.json", "package.json"]
+	"include": ["credentials/**/*", "nodes/**/*", "nodes/**/*.json"]
 }
