@@ -37,10 +37,3 @@ only: submit the package in the n8n Creator Portal (https://creators.n8n.io/node
 **Where things are written down:** `README.md` is for n8n users only, with no maintainer
 steps in it. Everything else is the code and its tests — treat them as the contract, and
 the public api docs at <https://crawlbrulee.com/docs> as the source of truth above both.
-
-## Commit & PR rule (hard requirement)
-
-- Do **NOT** add a `Co-Authored-By: Claude ...` trailer.
-- Do **NOT** add `🤖 Generated with [Claude Code]` or any other AI-attribution footer.
-
-Commits must read as authored solely by the user.
