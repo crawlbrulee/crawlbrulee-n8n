@@ -1,0 +1,74 @@
+{
+	"name": "n8n-nodes-crawlbrulee",
+	"version": "0.1.0",
+	"description": "crawlbrulee for n8n — EU-native web scraping for AI agents & developers. scrape any url to markdown, html, links, images, metadata or a screenshot, map a site's urls, and react to finished background scrapes.",
+	"license": "MIT",
+	"homepage": "https://crawlbrulee.com",
+	"keywords": [
+		"n8n-community-node-package",
+		"crawlbrulee",
+		"scrape",
+		"scraping",
+		"web-scraping",
+		"screenshot",
+		"sitemap",
+		"markdown",
+		"ai-agents",
+		"eu",
+		"gdpr"
+	],
+	"author": {
+		"name": "crawlbrulee",
+		"email": "contact@crawlbrulee.com"
+	},
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/crawlbrulee/crawlbrulee-n8n.git"
+	},
+	"bugs": {
+		"url": "https://github.com/crawlbrulee/crawlbrulee-n8n/issues"
+	},
+	"engines": {
+		"node": ">=22"
+	},
+	"packageManager": "pnpm@10.10.0",
+	"main": "index.js",
+	"scripts": {
+		"build": "n8n-node build",
+		"build:watch": "tsc --watch",
+		"dev": "n8n-node dev",
+		"lint": "n8n-node lint",
+		"lint:fix": "n8n-node lint --fix",
+		"typecheck": "tsc --noEmit",
+		"test": "vitest --run",
+		"verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+		"prepublishOnly": "n8n-node prerelease"
+	},
+	"files": [
+		"dist"
+	],
+	"n8n": {
+		"n8nNodesApiVersion": 1,
+		"strict": true,
+		"credentials": [
+			"dist/credentials/CrawlbruleeApi.credentials.js"
+		],
+		"nodes": [
+			"dist/nodes/Crawlbrulee/Crawlbrulee.node.js",
+			"dist/nodes/CrawlbruleeTrigger/CrawlbruleeTrigger.node.js"
+		]
+	},
+	"devDependencies": {
+		"@crawlbrulee/sdk": "^1.0.1",
+		"@n8n/node-cli": "0.48.6",
+		"@types/node": "^22.0.0",
+		"eslint": "9.32.0",
+		"n8n-workflow": "*",
+		"prettier": "3.6.2",
+		"typescript": "5.9.2",
+		"vitest": "^3.2.0"
+	},
+	"peerDependencies": {
+		"n8n-workflow": "*"
+	}
+}

@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnpm-store
+
+# Build output
+dist
+*.tsbuildinfo
+
+# Test + coverage
+coverage
+.nyc_output
+
+# Logs
+logs
+*.log
+npm-debug.log*
+
+# Caches
+.npm
+.eslintcache
+.cache
+
+# Output of `npm pack`
+*.tgz
+
+# Editor / OS
+.idea
+.vscode
+.DS_Store
+
+# dotenv
+.env
+.env.*
+!.env.example
+
+# sdd scratch
+
+# n8n local dev
+.n8n
+
+# local build plan (not published)
+
