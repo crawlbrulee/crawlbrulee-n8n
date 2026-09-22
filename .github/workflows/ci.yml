@@ -48,4 +48,7 @@ jobs:
             const banned = /(\.tsbuildinfo$|\.d\.ts$|\.js\.map$|^dist\/package\.json$)/;
             const bad = paths.filter((p) => !allowed.test(p) || banned.test(p));
             if (bad.length) { console.error("unexpected files in tarball:", bad); process.exit(1); }
+            // a build that emitted nothing would still pass the checks above
+            const js = paths.filter((p) => p.endsWith(".js"));
+            if (js.length < 10) { console.error("tarball is missing built code, only:", js); process.exit(1); }
           '
