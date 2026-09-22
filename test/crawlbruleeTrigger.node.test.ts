@@ -65,7 +65,7 @@ const node = new CrawlbruleeTrigger();
 describe('CrawlbruleeTrigger', () => {
 	it('describes itself as a trigger', () => {
 		expect(node.description.name).toBe('crawlbruleeTrigger');
-		expect(node.description.displayName).toBe('Crawlbrulee Trigger');
+		expect(node.description.displayName).toBe('crawlbrulee Trigger');
 		expect(node.description.inputs).toEqual([]);
 		expect(node.description.usableAsTool).toBeUndefined();
 		expect(node.description.webhooks?.[0]).toMatchObject({

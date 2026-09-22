@@ -15,7 +15,7 @@ import { crawlbruleeRequest } from './transport/request';
 
 export class Crawlbrulee implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'Crawlbrulee',
+		displayName: 'crawlbrulee',
 		name: 'crawlbrulee',
 		icon: 'file:crawlbrulee.svg',
 		group: ['transform'],
@@ -23,7 +23,7 @@ export class Crawlbrulee implements INodeType {
 		subtitle: '={{ $parameter["operation"] + ": " + $parameter["resource"] }}',
 		description:
 			"Scrape any URL to Markdown, HTML, links, images, metadata or a screenshot, and map a site's URLs",
-		defaults: { name: 'Crawlbrulee' },
+		defaults: { name: 'crawlbrulee' },
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
 		usableAsTool: true,

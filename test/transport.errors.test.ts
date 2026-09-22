@@ -10,10 +10,10 @@ const body = (name: string, message = 'msg', details?: Record<string, unknown>) 
 describe('describeApiError', () => {
 	it('explains a rejected key', () => {
 		expect(describeApiError(401, body('invalid_credentials')).message).toBe(
-			'Crawlbrulee rejected the API key. Check the key on the credential.',
+			'crawlbrulee rejected the API key. Check the key on the credential.',
 		);
 		expect(describeApiError(403, body('access_denied')).message).toBe(
-			'Crawlbrulee rejected the API key. Check the key on the credential.',
+			'crawlbrulee rejected the API key. Check the key on the credential.',
 		);
 	});
 
@@ -27,9 +27,9 @@ describe('describeApiError', () => {
 		expect(
 			describeApiError(429, body('too_many_requests', 'slow down', { retry_after_ms: 1500 }))
 				.message,
-		).toBe('Crawlbrulee rate limit reached. Retry after 1500 ms.');
+		).toBe('crawlbrulee rate limit reached. Retry after 1500 ms.');
 		expect(describeApiError(429, body('too_many_requests', 'slow down')).message).toBe(
-			'Crawlbrulee rate limit reached.',
+			'crawlbrulee rate limit reached.',
 		);
 	});
 
@@ -61,9 +61,9 @@ describe('describeApiError', () => {
 
 	it('falls back on a non-api body', () => {
 		expect(describeApiError(502, '<html>bad gateway</html>').message).toBe(
-			'Crawlbrulee returned HTTP 502.',
+			'crawlbrulee returned HTTP 502.',
 		);
-		expect(describeApiError(503, undefined).message).toBe('Crawlbrulee returned HTTP 503.');
+		expect(describeApiError(503, undefined).message).toBe('crawlbrulee returned HTTP 503.');
 	});
 
 	it('keeps the raw body in description', () => {

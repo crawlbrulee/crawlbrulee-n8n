@@ -64,7 +64,7 @@ describe('crawlbruleeRequest', () => {
 		await expect(
 			crawlbruleeRequest.call(self, { method: 'GET', path: '/api/usage', itemIndex: 3 }),
 		).rejects.toMatchObject({
-			message: 'Crawlbrulee rate limit reached. Retry after 10 ms.',
+			message: 'crawlbrulee rate limit reached. Retry after 10 ms.',
 			httpCode: '429',
 			context: { itemIndex: 3 },
 		});

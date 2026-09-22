@@ -23,7 +23,7 @@ export const pageOperations: INodeProperties = {
 			value: 'scrapeAsync',
 			action: 'Start an async scrape',
 			description:
-				'Submit a background scrape job and return its job ID. Pair it with the Crawlbrulee Trigger.',
+				'Submit a background scrape job and return its job ID. Pair it with the crawlbrulee Trigger.',
 		},
 	],
 	default: 'scrape',
@@ -232,7 +232,7 @@ export const pageFields: INodeProperties[] = [
 		default: '',
 		placeholder: 'e.g. https://your-n8n.example/webhook/…',
 		description:
-			'Receives a signed scrape.complete POST when the job finishes. Paste the URL shown by a Crawlbrulee Trigger node.',
+			'Receives a signed scrape.complete POST when the job finishes. Paste the URL shown by a crawlbrulee Trigger node.',
 		displayOptions: { show: { resource: ['page'], operation: ['scrapeAsync'] } },
 	},
 	{

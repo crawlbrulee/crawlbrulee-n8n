@@ -15,14 +15,14 @@ const SEEN_LIMIT = 500;
 
 export class CrawlbruleeTrigger implements INodeType {
 	description: INodeTypeDescription = {
-		displayName: 'Crawlbrulee Trigger',
+		displayName: 'crawlbrulee Trigger',
 		name: 'crawlbruleeTrigger',
 		icon: 'file:crawlbrulee.svg',
 		group: ['trigger'],
 		version: 1,
 		subtitle: 'scrape.complete',
 		description: 'Starts the workflow when a crawlbrulee async scrape finishes',
-		defaults: { name: 'Crawlbrulee Trigger' },
+		defaults: { name: 'crawlbrulee Trigger' },
 		inputs: [],
 		outputs: [NodeConnectionTypes.Main],
 		credentials: [{ name: 'crawlbruleeApi', required: true }],

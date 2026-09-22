@@ -2,7 +2,7 @@ import type { INode, JsonObject } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
 import type { ApiErrorResponse } from '@crawlbrulee/sdk';
 
-const KEY_REJECTED = 'Crawlbrulee rejected the API key. Check the key on the credential.';
+const KEY_REJECTED = 'crawlbrulee rejected the API key. Check the key on the credential.';
 const SCRAPE_HINT =
 	'The Advanced proxy tier has a higher success rate; enable Require JS for JavaScript-rendered content.';
 
@@ -22,7 +22,7 @@ export function describeApiError(
 ): { message: string; description: string } {
 	const description = typeof body === 'string' ? body : JSON.stringify(body ?? null);
 	if (!isApiErrorBody(body)) {
-		return { message: `Crawlbrulee returned HTTP ${status}.`, description };
+		return { message: `crawlbrulee returned HTTP ${status}.`, description };
 	}
 	const details = (body.details ?? {}) as Record<string, unknown>;
 	switch (body.name) {
@@ -39,7 +39,7 @@ export function describeApiError(
 				typeof details.retry_after_ms === 'number'
 					? ` Retry after ${details.retry_after_ms} ms.`
 					: '';
-			return { message: `Crawlbrulee rate limit reached.${retry}`, description };
+			return { message: `crawlbrulee rate limit reached.${retry}`, description };
 		}
 		case 'usage_allocation_error':
 			if (details.reason === 'credit_limit') return { message: 'Out of credits.', description };
@@ -49,7 +49,7 @@ export function describeApiError(
 		case 'scrape_error':
 			return { message: `${body.message.replace(/[.\s]*$/, '')}. ${SCRAPE_HINT}`, description };
 		default:
-			return { message: body.message || `Crawlbrulee returned HTTP ${status}.`, description };
+			return { message: body.message || `crawlbrulee returned HTTP ${status}.`, description };
 	}
 }
 
