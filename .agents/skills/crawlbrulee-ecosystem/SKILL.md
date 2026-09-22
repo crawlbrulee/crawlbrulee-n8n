@@ -28,4 +28,9 @@ endpoints:
 This repo depends on `@crawlbrulee/sdk` for **types only**, as a dev dependency, because a
 verified n8n node may not ship runtime dependencies.
 
+If this checkout sits next to the maintainer's other crawlbrulee repos, a wider
+`crawlbrulee-ecosystem` skill is available one level up and is the better source for
+anything spanning repos. It is absent from a standalone clone, which is fine: everything
+this repo needs is in this repo.
+
 Read `AGENTS.md` for the rules that apply inside this repo.

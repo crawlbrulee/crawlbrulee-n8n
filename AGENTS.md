@@ -6,7 +6,9 @@ This file is auto-loaded by coding agents (Claude Code, Codex, Gemini CLI, and o
 
 The **crawlbrulee app for n8n** (npm `n8n-nodes-crawlbrulee`). The api it calls is the
 public one at <https://crawlbrulee.com/docs>; where this repo and the api disagree, the api
-wins. The `crawlbrulee-ecosystem` skill in `.agents/skills/` has the wider context.
+wins. The `crawlbrulee-ecosystem` skill in `.agents/skills/` has the wider context, and
+points at the maintainer's fuller version of that skill when this checkout sits beside the
+other crawlbrulee repos.
 
 **What ships:** the `crawlbrulee` node — Scrape (Scrape URL, Scrape URL (Async), Get Scrape
 Status, Get Scrape Result), Map (Map Website), Account (Get Credit Usage, Get Account Info)
