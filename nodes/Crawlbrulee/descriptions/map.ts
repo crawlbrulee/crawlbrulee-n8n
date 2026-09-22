@@ -1,24 +1,24 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { cacheMaxAgeOption, countryOption, proxyOption } from './shared';
 
-export const siteOperations: INodeProperties = {
+export const mapOperations: INodeProperties = {
 	displayName: 'Operation',
 	name: 'operation',
 	type: 'options',
 	noDataExpression: true,
-	displayOptions: { show: { resource: ['site'] } },
+	displayOptions: { show: { resource: ['map'] } },
 	options: [
 		{
-			name: 'Map',
+			name: 'Map Website',
 			value: 'map',
-			action: 'Map a site',
+			action: 'Map website',
 			description: 'Discover the URLs of a site from its sitemap and homepage links',
 		},
 	],
 	default: 'map',
 };
 
-export const siteFields: INodeProperties[] = [
+export const mapFields: INodeProperties[] = [
 	{
 		displayName: 'URL',
 		name: 'url',
@@ -27,7 +27,7 @@ export const siteFields: INodeProperties[] = [
 		default: '',
 		placeholder: 'e.g. https://example.com',
 		description: 'The site to map',
-		displayOptions: { show: { resource: ['site'], operation: ['map'] } },
+		displayOptions: { show: { resource: ['map'], operation: ['map'] } },
 	},
 	{
 		displayName: 'Options',
@@ -35,7 +35,7 @@ export const siteFields: INodeProperties[] = [
 		type: 'collection',
 		placeholder: 'Add Option',
 		default: {},
-		displayOptions: { show: { resource: ['site'], operation: ['map'] } },
+		displayOptions: { show: { resource: ['map'], operation: ['map'] } },
 		options: [
 			cacheMaxAgeOption('7 days'),
 			countryOption,

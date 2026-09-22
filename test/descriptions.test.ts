@@ -6,14 +6,14 @@ const find = (name: string, pred?: (p: INodeProperties) => boolean) =>
 	crawlbruleeProperties.filter((p) => p.name === name && (!pred || pred(p)));
 
 describe('crawlbrulee node properties', () => {
-	it('lists the four resources and seven operations', () => {
+	it('lists the three resources and seven operations', () => {
 		const resource = find('resource')[0];
 		expect((resource.options as INodePropertyOptions[]).map((o) => o.value)).toEqual([
 			'account',
-			'job',
-			'page',
-			'site',
+			'map',
+			'scrape',
 		]);
+		expect(resource.default).toBe('scrape');
 		const ops = find('operation').flatMap((p) =>
 			(p.options as INodePropertyOptions[]).map((o) => o.value),
 		);
@@ -33,7 +33,7 @@ describe('crawlbrulee node properties', () => {
 		expect(extract.default).toEqual(['cleaned_html', 'metadata']);
 		const options = find(
 			'options',
-			(p) => p.displayOptions?.show?.resource?.includes('page') === true,
+			(p) => p.displayOptions?.show?.operation?.includes('scrape') === true,
 		)[0];
 		const proxy = (options.options as INodeProperties[]).find((o) => o.name === 'proxy')!;
 		expect(proxy.default).toBe('auto');
@@ -49,25 +49,28 @@ describe('crawlbrulee node properties', () => {
 			'full_page',
 			'viewport',
 		]);
-		const pageDownload = find(
+		const scrapeDownload = find(
 			'downloadScreenshot',
-			(p) => p.displayOptions?.show?.resource?.includes('page') === true,
+			(p) => p.displayOptions?.show?.operation?.includes('scrape') === true,
 		)[0];
-		expect(pageDownload.displayOptions?.show?.operation).toEqual(['scrape']);
-		expect(pageDownload.displayOptions?.show?.screenshotType).toEqual(['full_page', 'viewport']);
+		expect(scrapeDownload.displayOptions?.show?.resource).toEqual(['scrape']);
+		expect(scrapeDownload.displayOptions?.show?.operation).toEqual(['scrape']);
+		expect(scrapeDownload.displayOptions?.show?.screenshotType).toEqual(['full_page', 'viewport']);
 	});
 
-	it('offers the screenshot download on job results too', () => {
+	it('offers the screenshot download on a finished job too', () => {
 		const jobDownload = find(
 			'downloadScreenshot',
-			(p) => p.displayOptions?.show?.resource?.includes('job') === true,
+			(p) => p.displayOptions?.show?.operation?.includes('getScrapeResult') === true,
 		)[0];
 		expect(jobDownload).toBeDefined();
+		expect(jobDownload.displayOptions?.show?.resource).toEqual(['scrape']);
 		expect(jobDownload.displayOptions?.show?.operation).toEqual(['getScrapeResult']);
 		expect(jobDownload.default).toBe(false);
 	});
 
-	it('has a job id field for both job operations', () => {
+	it('has a job id field on both job operations of the scrape resource', () => {
+		expect(find('jobId')[0].displayOptions?.show?.resource).toEqual(['scrape']);
 		expect(find('jobId')[0].displayOptions?.show?.operation?.sort()).toEqual([
 			'getScrapeResult',
 			'getScrapeStatus',

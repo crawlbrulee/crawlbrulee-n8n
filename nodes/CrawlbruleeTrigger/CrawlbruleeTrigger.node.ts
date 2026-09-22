@@ -37,7 +37,7 @@ export class CrawlbruleeTrigger implements INodeType {
 		properties: [
 			{
 				displayName:
-					"Copy this node's webhook URL into the Webhook URL field of a Scrape (Async) operation. Each finished job posts one scrape.complete event here. Set the Webhook Signing Secret on the credential to verify deliveries.",
+					"Copy this node's webhook URL into the Webhook URL field of a Scrape URL (Async) operation. Each finished job posts one scrape.complete event here. Set the Webhook Signing Secret on the credential to verify deliveries.",
 				name: 'notice',
 				type: 'notice',
 				default: '',
@@ -54,7 +54,7 @@ export class CrawlbruleeTrigger implements INodeType {
 	};
 
 	// The crawlbrulee api has no webhook-subscription endpoint: the webhook url is
-	// attached per job by the Scrape (Async) operation. So there is nothing to
+	// attached per job by the Scrape URL (Async) operation. So there is nothing to
 	// register or remove remotely; these only satisfy n8n's lifecycle contract.
 	webhookMethods = {
 		default: {

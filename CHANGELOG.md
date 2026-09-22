@@ -8,6 +8,6 @@ this project follows [Semantic Versioning](https://semver.org). while on `0.x`, 
 
 ### added
 
-- the **Crawlbrulee** node: Scrape, Scrape (Async), Get Scrape Status, Get Scrape Result, Map, Get Usage, Whoami. optional screenshot download into binary data. usable as an AI Agent tool.
+- the **Crawlbrulee** node: Scrape URL, Scrape URL (Async), Get Scrape Status, Get Scrape Result (all under Scrape), Map Website, Get Credit Usage, Get Account Info. optional screenshot download into binary data. usable as an AI Agent tool.
 - the **Crawlbrulee Trigger** node: fires on `scrape.complete` deliveries, verifies the signature when a signing secret is set, drops repeats of the same event, and can fetch the result in the same step.
 - the **Crawlbrulee API** credential with a zero-cost whoami test.

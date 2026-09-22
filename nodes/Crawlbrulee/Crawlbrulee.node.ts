@@ -90,7 +90,7 @@ function jobIdSegment(node: INode, raw: unknown, itemIndex: number): string {
 	if (jobId === '') {
 		throw new NodeOperationError(node, 'Job ID is required', {
 			itemIndex,
-			description: 'Set the Job ID field to the id returned by Scrape (Async).',
+			description: 'Set the Job ID field to the id returned by Scrape URL (Async).',
 		});
 	}
 	return encodeURIComponent(jobId);
@@ -116,7 +116,7 @@ async function runOperation(
 	const node = this.getNode();
 	const key = `${resource}:${operation}`;
 	switch (key) {
-		case 'page:scrape': {
+		case 'scrape:scrape': {
 			const body = buildScrapeBody(node, i, scrapeParams.call(this, i)) as unknown as IDataObject;
 			const json = await crawlbruleeRequest.call(this, {
 				method: 'POST',
@@ -126,7 +126,7 @@ async function runOperation(
 			});
 			return scrapeAndMaybeDownload.call(this, i, json);
 		}
-		case 'page:scrapeAsync': {
+		case 'scrape:scrapeAsync': {
 			const body = buildAsyncScrapeBody(
 				node,
 				i,
@@ -141,7 +141,7 @@ async function runOperation(
 				}),
 			};
 		}
-		case 'job:getScrapeStatus': {
+		case 'scrape:getScrapeStatus': {
 			const jobId = jobIdSegment(node, this.getNodeParameter('jobId', i), i);
 			return {
 				json: await crawlbruleeRequest.call(this, {
@@ -151,7 +151,7 @@ async function runOperation(
 				}),
 			};
 		}
-		case 'job:getScrapeResult': {
+		case 'scrape:getScrapeResult': {
 			const jobId = jobIdSegment(node, this.getNodeParameter('jobId', i), i);
 			const json = await crawlbruleeRequest.call(this, {
 				method: 'GET',
@@ -160,7 +160,7 @@ async function runOperation(
 			});
 			return scrapeAndMaybeDownload.call(this, i, json);
 		}
-		case 'site:map': {
+		case 'map:map': {
 			const params: MapParams = {
 				url: this.getNodeParameter('url', i) as string,
 				options: this.getNodeParameter('options', i, {}) as MapParams['options'],

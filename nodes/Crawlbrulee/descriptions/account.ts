@@ -8,17 +8,17 @@ export const accountOperations: INodeProperties = {
 	displayOptions: { show: { resource: ['account'] } },
 	options: [
 		{
-			name: 'Get Usage',
+			name: 'Get Account Info',
+			value: 'whoami',
+			action: 'Get account info',
+			description: 'The organization behind the API key: its name, the token name and a preview',
+		},
+		{
+			name: 'Get Credit Usage',
 			value: 'getUsage',
 			action: 'Get credit usage',
 			description:
 				'Credits used and left in the current billing cycle, plus concurrency and the reset date',
-		},
-		{
-			name: 'Whoami',
-			value: 'whoami',
-			action: 'Get the organization behind the API key',
-			description: 'Organization name, token name and a token preview',
 		},
 	],
 	default: 'getUsage',

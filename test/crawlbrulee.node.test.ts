@@ -53,7 +53,7 @@ describe('Crawlbrulee node', () => {
 	it('scrapes a page and returns the body with pairedItem', async () => {
 		const { self, httpRequestWithAuthentication } = ctx(
 			{
-				resource: 'page',
+				resource: 'scrape',
 				operation: 'scrape',
 				url: 'https://example.com',
 				extract: ['markdown'],
@@ -82,7 +82,7 @@ describe('Crawlbrulee node', () => {
 		const cases: Array<[Params, string, string]> = [
 			[
 				{
-					resource: 'page',
+					resource: 'scrape',
 					operation: 'scrapeAsync',
 					url: 'https://x',
 					extract: ['markdown'],
@@ -96,16 +96,16 @@ describe('Crawlbrulee node', () => {
 				'/api/scrape/async',
 			],
 			[
-				{ resource: 'job', operation: 'getScrapeStatus', jobId: 'job 1' },
+				{ resource: 'scrape', operation: 'getScrapeStatus', jobId: 'job 1' },
 				'GET',
 				'/api/scrape/status/job%201',
 			],
 			[
-				{ resource: 'job', operation: 'getScrapeResult', jobId: 'j' },
+				{ resource: 'scrape', operation: 'getScrapeResult', jobId: 'j' },
 				'GET',
 				'/api/scrape/result/j',
 			],
-			[{ resource: 'site', operation: 'map', url: 'https://x', options: {} }, 'POST', '/api/map'],
+			[{ resource: 'map', operation: 'map', url: 'https://x', options: {} }, 'POST', '/api/map'],
 			[{ resource: 'account', operation: 'getUsage' }, 'GET', '/api/usage'],
 			[{ resource: 'account', operation: 'whoami' }, 'GET', '/api/whoami'],
 		];
@@ -121,7 +121,7 @@ describe('Crawlbrulee node', () => {
 	it('attaches binary when Download Screenshot is on', async () => {
 		const { self } = ctx(
 			{
-				resource: 'page',
+				resource: 'scrape',
 				operation: 'scrape',
 				url: 'https://x',
 				extract: [],
@@ -153,7 +153,7 @@ describe('Crawlbrulee node', () => {
 
 	it('attaches binary on a job result when Download Screenshot is on', async () => {
 		const { self } = ctx(
-			{ resource: 'job', operation: 'getScrapeResult', jobId: 'j', downloadScreenshot: true },
+			{ resource: 'scrape', operation: 'getScrapeResult', jobId: 'j', downloadScreenshot: true },
 			{
 				statusCode: 200,
 				body: {
@@ -202,7 +202,7 @@ describe('Crawlbrulee node', () => {
 		for (const operation of ['getScrapeStatus', 'getScrapeResult']) {
 			for (const jobId of ['', '   ']) {
 				const { self, httpRequestWithAuthentication } = ctx(
-					{ resource: 'job', operation, jobId },
+					{ resource: 'scrape', operation, jobId },
 					{ statusCode: 200, body: {} },
 				);
 				await expect(node.execute.call(self)).rejects.toThrow(/Job ID is required/);
@@ -214,7 +214,7 @@ describe('Crawlbrulee node', () => {
 	it('rejects an unknown operation', async () => {
 		await expect(
 			node.execute.call(
-				ctx({ resource: 'page', operation: 'nope' }, { statusCode: 200, body: {} }).self,
+				ctx({ resource: 'scrape', operation: 'nope' }, { statusCode: 200, body: {} }).self,
 			),
 		).rejects.toThrow(/not supported/);
 	});

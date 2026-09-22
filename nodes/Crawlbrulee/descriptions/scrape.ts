@@ -1,27 +1,40 @@
 import type { INodeProperties } from 'n8n-workflow';
 import { cacheMaxAgeOption, countryOption, localeOption, proxyOption } from './shared';
 
-const pageShow = { resource: ['page'] };
-const scrapeShow = { resource: ['page'], operation: ['scrape', 'scrapeAsync'] };
-const screenshotShow = { ...scrapeShow, screenshotType: ['full_page', 'viewport'] };
+const resourceShow = { resource: ['scrape'] };
+const urlShow = { resource: ['scrape'], operation: ['scrape', 'scrapeAsync'] };
+const screenshotShow = { ...urlShow, screenshotType: ['full_page', 'viewport'] };
+const jobShow = { resource: ['scrape'], operation: ['getScrapeStatus', 'getScrapeResult'] };
 
-export const pageOperations: INodeProperties = {
+export const scrapeOperations: INodeProperties = {
 	displayName: 'Operation',
 	name: 'operation',
 	type: 'options',
 	noDataExpression: true,
-	displayOptions: { show: pageShow },
+	displayOptions: { show: resourceShow },
 	options: [
 		{
-			name: 'Scrape',
+			name: 'Get Scrape Result',
+			value: 'getScrapeResult',
+			action: 'Get scrape result',
+			description: 'Fetch the content of a finished async scrape',
+		},
+		{
+			name: 'Get Scrape Status',
+			value: 'getScrapeStatus',
+			action: 'Get scrape status',
+			description: 'Check whether an async scrape is pending, running, done or failed',
+		},
+		{
+			name: 'Scrape URL',
 			value: 'scrape',
-			action: 'Scrape a page',
+			action: 'Scrape URL',
 			description: 'Fetch one URL and return the requested content',
 		},
 		{
-			name: 'Scrape (Async)',
+			name: 'Scrape URL (Async)',
 			value: 'scrapeAsync',
-			action: 'Start an async scrape',
+			action: 'Scrape URL async',
 			description:
 				'Submit a background scrape job and return its job ID. Pair it with the crawlbrulee Trigger.',
 		},
@@ -29,7 +42,16 @@ export const pageOperations: INodeProperties = {
 	default: 'scrape',
 };
 
-export const pageFields: INodeProperties[] = [
+export const scrapeFields: INodeProperties[] = [
+	{
+		displayName: 'Job ID',
+		name: 'jobId',
+		type: 'string',
+		required: true,
+		default: '',
+		description: 'The job ID returned by Scrape URL (Async)',
+		displayOptions: { show: jobShow },
+	},
 	{
 		displayName: 'URL',
 		name: 'url',
@@ -38,7 +60,7 @@ export const pageFields: INodeProperties[] = [
 		default: '',
 		placeholder: 'e.g. https://example.com',
 		description: 'The URL to scrape',
-		displayOptions: { show: scrapeShow },
+		displayOptions: { show: urlShow },
 	},
 	{
 		displayName: 'Extract',
@@ -58,7 +80,7 @@ export const pageFields: INodeProperties[] = [
 		],
 		default: ['cleaned_html', 'metadata'],
 		description: 'Which outputs to return',
-		displayOptions: { show: scrapeShow },
+		displayOptions: { show: urlShow },
 	},
 	{
 		displayName: 'Screenshot',
@@ -71,7 +93,7 @@ export const pageFields: INodeProperties[] = [
 		],
 		default: 'none',
 		description: 'Capture a screenshot. Uses a headless browser; adds latency and credits.',
-		displayOptions: { show: scrapeShow },
+		displayOptions: { show: urlShow },
 	},
 	{
 		displayName: 'Screenshot Options',
@@ -175,11 +197,11 @@ export const pageFields: INodeProperties[] = [
 		type: 'boolean',
 		default: false,
 		description: 'Whether to download the screenshot (and its slices) into binary data on the item',
-		// Only the sync scrape returns an image; an async submit returns a job id, so the job
-		// resource has its own Download Screenshot field for Get Scrape Result.
+		// Only the sync scrape returns an image; an async submit returns a job id, so Get Scrape
+		// Result carries its own Download Screenshot field further down.
 		displayOptions: {
 			show: {
-				resource: ['page'],
+				resource: ['scrape'],
 				operation: ['scrape'],
 				screenshotType: ['full_page', 'viewport'],
 			},
@@ -191,7 +213,7 @@ export const pageFields: INodeProperties[] = [
 		type: 'collection',
 		placeholder: 'Add Option',
 		default: {},
-		displayOptions: { show: scrapeShow },
+		displayOptions: { show: urlShow },
 		options: [
 			cacheMaxAgeOption('2 days'),
 			countryOption,
@@ -233,7 +255,7 @@ export const pageFields: INodeProperties[] = [
 		placeholder: 'e.g. https://your-n8n.example/webhook/…',
 		description:
 			'Receives a signed scrape.complete POST when the job finishes. Paste the URL shown by a crawlbrulee Trigger node.',
-		displayOptions: { show: { resource: ['page'], operation: ['scrapeAsync'] } },
+		displayOptions: { show: { resource: ['scrape'], operation: ['scrapeAsync'] } },
 	},
 	{
 		displayName: 'Webhook Metadata',
@@ -241,6 +263,15 @@ export const pageFields: INodeProperties[] = [
 		type: 'json',
 		default: '',
 		description: 'JSON object echoed back in the webhook as data.metadata, up to 2048 bytes',
-		displayOptions: { show: { resource: ['page'], operation: ['scrapeAsync'] } },
+		displayOptions: { show: { resource: ['scrape'], operation: ['scrapeAsync'] } },
+	},
+	{
+		displayName: 'Download Screenshot',
+		name: 'downloadScreenshot',
+		type: 'boolean',
+		default: false,
+		description:
+			'Whether to download the screenshot (and its slices) into binary data when the result has one',
+		displayOptions: { show: { resource: ['scrape'], operation: ['getScrapeResult'] } },
 	},
 ];
