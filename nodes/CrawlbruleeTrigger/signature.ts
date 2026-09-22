@@ -84,6 +84,7 @@ export async function verifySignature(args: VerifySignatureArgs): Promise<Signat
 		const match = FORMAT.exec(raw.trim());
 		if (!match) continue;
 		const t = Number(match[1]);
+		if (!Number.isSafeInteger(t)) continue;
 		if (tolerance && Math.abs(now - t) > tolerance) {
 			worse('timestamp_out_of_tolerance');
 			continue;

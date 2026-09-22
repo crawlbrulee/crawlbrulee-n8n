@@ -36,4 +36,29 @@ describe('verifySignature', () => {
 		const other = JSON.stringify(JSON.parse(payload), null, 2);
 		expect(await verifySignature({ payload: other, headers: { 'x-cwbl-signature': sign(now) }, secret, nowSeconds: now })).toEqual({ verified: false, reason: 'signature_mismatch' });
 	});
+
+	it('rejects an unsafe-integer timestamp as malformed, like the sdk', async () => {
+		const t = 9_007_199_254_740_992;
+		expect(await verifySignature({ payload, headers: { 'x-cwbl-signature': sign(t) }, secret, nowSeconds: now, toleranceSeconds: 0 })).toEqual({ verified: false, reason: 'malformed_signature' });
+	});
+
+	it('falls back to the rotated header when the primary is stale', async () => {
+		const r = await verifySignature({ payload, headers: { 'x-cwbl-signature': sign(now - 301), 'x-cwbl-signature-rotated': sign(now) }, secret, nowSeconds: now });
+		expect(r).toEqual({ verified: true, signedWith: 'rotated' });
+	});
+
+	it('reports malformed when both headers are malformed', async () => {
+		const r = await verifySignature({ payload, headers: { 'x-cwbl-signature': 'garbage', 'x-cwbl-signature-rotated': 'garbage' }, secret, nowSeconds: now });
+		expect(r).toEqual({ verified: false, reason: 'malformed_signature' });
+	});
+
+	it('ranks a mismatch above a malformed header', async () => {
+		const r = await verifySignature({ payload, headers: { 'x-cwbl-signature': 'garbage', 'x-cwbl-signature-rotated': sign(now, 'wrong') }, secret, nowSeconds: now });
+		expect(r).toEqual({ verified: false, reason: 'signature_mismatch' });
+	});
+
+	it('reports a timestamp a year in the future as out of tolerance', async () => {
+		const r = await verifySignature({ payload, headers: { 'x-cwbl-signature': sign(now + 31_536_000) }, secret, nowSeconds: now });
+		expect(r).toEqual({ verified: false, reason: 'timestamp_out_of_tolerance' });
+	});
 });
