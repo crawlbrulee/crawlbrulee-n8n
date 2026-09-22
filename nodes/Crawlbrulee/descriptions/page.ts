@@ -22,7 +22,8 @@ export const pageOperations: INodeProperties = {
 			name: 'Scrape (Async)',
 			value: 'scrapeAsync',
 			action: 'Start an async scrape',
-			description: 'Submit a background scrape job and return its job ID. Pair it with the Crawlbrulee Trigger.',
+			description:
+				'Submit a background scrape job and return its job ID. Pair it with the Crawlbrulee Trigger.',
 		},
 	],
 	default: 'scrape',
@@ -48,7 +49,11 @@ export const pageFields: INodeProperties[] = [
 			{ name: 'Images', value: 'images', description: 'Inline images found on the page' },
 			{ name: 'Links', value: 'links', description: 'Links found on the page' },
 			{ name: 'Markdown', value: 'markdown', description: 'The page as clean Markdown' },
-			{ name: 'Metadata', value: 'metadata', description: 'Title, description and OG/Twitter tags' },
+			{
+				name: 'Metadata',
+				value: 'metadata',
+				description: 'Title, description and OG/Twitter tags',
+			},
 			{ name: 'Raw HTML', value: 'raw_html', description: 'The page HTML exactly as it arrived' },
 		],
 		default: ['cleaned_html', 'metadata'],
@@ -94,8 +99,16 @@ export const pageFields: INodeProperties[] = [
 								name: 'type',
 								type: 'options',
 								options: [
-									{ name: 'Scroll', value: 'scroll', description: 'Scroll by a number of pixels. Negative scrolls up.' },
-									{ name: 'Wait', value: 'wait', description: 'Pause for a number of milliseconds' },
+									{
+										name: 'Scroll',
+										value: 'scroll',
+										description: 'Scroll by a number of pixels. Negative scrolls up.',
+									},
+									{
+										name: 'Wait',
+										value: 'wait',
+										description: 'Pause for a number of milliseconds',
+									},
 								],
 								default: 'wait',
 							},
@@ -143,7 +156,8 @@ export const pageFields: INodeProperties[] = [
 				type: 'number',
 				typeOptions: { minValue: 500 },
 				default: 1000,
-				description: 'Cut the screenshot into horizontal tiles of this height in pixels, at least 500',
+				description:
+					'Cut the screenshot into horizontal tiles of this height in pixels, at least 500',
 			},
 			{
 				displayName: 'Width',
@@ -163,7 +177,13 @@ export const pageFields: INodeProperties[] = [
 		description: 'Whether to download the screenshot (and its slices) into binary data on the item',
 		// Only the sync scrape returns an image; an async submit returns a job id, so the job
 		// resource has its own Download Screenshot field for Get Scrape Result.
-		displayOptions: { show: { resource: ['page'], operation: ['scrape'], screenshotType: ['full_page', 'viewport'] } },
+		displayOptions: {
+			show: {
+				resource: ['page'],
+				operation: ['scrape'],
+				screenshotType: ['full_page', 'viewport'],
+			},
+		},
 	},
 	{
 		displayName: 'Options',
@@ -182,7 +202,8 @@ export const pageFields: INodeProperties[] = [
 				typeOptions: { multipleValues: true, multipleValueButtonText: 'Add Selector' },
 				default: [],
 				placeholder: 'e.g. .cookie-banner',
-				description: 'CSS selectors removed before anything is extracted. Sending any skips the cache.',
+				description:
+					'CSS selectors removed before anything is extracted. Sending any skips the cache.',
 			},
 			localeOption,
 			proxyOption,
@@ -191,14 +212,16 @@ export const pageFields: INodeProperties[] = [
 				name: 'removeAdsAndPopups',
 				type: 'boolean',
 				default: true,
-				description: 'Whether to remove ads, cookie banners, consent dialogs and chat widgets before extracting',
+				description:
+					'Whether to remove ads, cookie banners, consent dialogs and chat widgets before extracting',
 			},
 			{
 				displayName: 'Require JS',
 				name: 'requireJs',
 				type: 'boolean',
 				default: false,
-				description: 'Whether to render JavaScript in a headless browser first. Adds latency and credits.',
+				description:
+					'Whether to render JavaScript in a headless browser first. Adds latency and credits.',
 			},
 		],
 	},
@@ -208,7 +231,8 @@ export const pageFields: INodeProperties[] = [
 		type: 'string',
 		default: '',
 		placeholder: 'e.g. https://your-n8n.example/webhook/…',
-		description: 'Receives a signed scrape.complete POST when the job finishes. Paste the URL shown by a Crawlbrulee Trigger node.',
+		description:
+			'Receives a signed scrape.complete POST when the job finishes. Paste the URL shown by a Crawlbrulee Trigger node.',
 		displayOptions: { show: { resource: ['page'], operation: ['scrapeAsync'] } },
 	},
 	{

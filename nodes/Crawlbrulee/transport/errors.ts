@@ -16,7 +16,10 @@ function isApiErrorBody(body: unknown): body is ApiErrorResponse {
 }
 
 /** Turn an api error response into the message the user sees. Pure; no n8n types. */
-export function describeApiError(status: number, body: unknown): { message: string; description: string } {
+export function describeApiError(
+	status: number,
+	body: unknown,
+): { message: string; description: string } {
 	const description = typeof body === 'string' ? body : JSON.stringify(body ?? null);
 	if (!isApiErrorBody(body)) {
 		return { message: `Crawlbrulee returned HTTP ${status}.`, description };
@@ -27,14 +30,21 @@ export function describeApiError(status: number, body: unknown): { message: stri
 		case 'access_denied':
 			return { message: KEY_REJECTED, description };
 		case 'antibot_blocked':
-			return { message: `The site's anti-bot protection blocked this scrape. ${body.message}`.trim(), description };
+			return {
+				message: `The site's anti-bot protection blocked this scrape. ${body.message}`.trim(),
+				description,
+			};
 		case 'too_many_requests': {
-			const retry = typeof details.retry_after_ms === 'number' ? ` Retry after ${details.retry_after_ms} ms.` : '';
+			const retry =
+				typeof details.retry_after_ms === 'number'
+					? ` Retry after ${details.retry_after_ms} ms.`
+					: '';
 			return { message: `Crawlbrulee rate limit reached.${retry}`, description };
 		}
 		case 'usage_allocation_error':
 			if (details.reason === 'credit_limit') return { message: 'Out of credits.', description };
-			if (details.reason === 'concurrency_limit') return { message: 'Concurrency limit reached.', description };
+			if (details.reason === 'concurrency_limit')
+				return { message: 'Concurrency limit reached.', description };
 			return { message: body.message, description };
 		case 'scrape_error':
 			return { message: `${body.message.replace(/[.\s]*$/, '')}. ${SCRAPE_HINT}`, description };
@@ -44,7 +54,12 @@ export function describeApiError(status: number, body: unknown): { message: stri
 }
 
 /** Build the NodeApiError n8n shows for a non-2xx api response. */
-export function toNodeApiError(node: INode, status: number, body: unknown, itemIndex?: number): NodeApiError {
+export function toNodeApiError(
+	node: INode,
+	status: number,
+	body: unknown,
+	itemIndex?: number,
+): NodeApiError {
 	const { message, description } = describeApiError(status, body);
 	const errorResponse: JsonObject = isApiErrorBody(body)
 		? (body as unknown as JsonObject)

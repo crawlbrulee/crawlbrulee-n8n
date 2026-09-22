@@ -21,7 +21,8 @@ export class Crawlbrulee implements INodeType {
 		group: ['transform'],
 		version: 1,
 		subtitle: '={{ $parameter["operation"] + ": " + $parameter["resource"] }}',
-		description: "Scrape any URL to Markdown, HTML, links, images, metadata or a screenshot, and map a site's URLs",
+		description:
+			"Scrape any URL to Markdown, HTML, links, images, metadata or a screenshot, and map a site's URLs",
 		defaults: { name: 'Crawlbrulee' },
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
@@ -63,41 +64,88 @@ function scrapeParams(this: IExecuteFunctions, i: number): ScrapeParams {
 	return {
 		url: this.getNodeParameter('url', i) as string,
 		extract: this.getNodeParameter('extract', i, []) as ScrapeParams['extract'],
-		screenshotType: this.getNodeParameter('screenshotType', i, 'none') as ScrapeParams['screenshotType'],
-		screenshotOptions: this.getNodeParameter('screenshotOptions', i, {}) as ScrapeParams['screenshotOptions'],
+		screenshotType: this.getNodeParameter(
+			'screenshotType',
+			i,
+			'none',
+		) as ScrapeParams['screenshotType'],
+		screenshotOptions: this.getNodeParameter(
+			'screenshotOptions',
+			i,
+			{},
+		) as ScrapeParams['screenshotOptions'],
 		options: this.getNodeParameter('options', i, {}) as ScrapeParams['options'],
 		webhookUrl: this.getNodeParameter('webhookUrl', i, '') as string,
-		webhookMetadata: this.getNodeParameter('webhookMetadata', i, '') as ScrapeParams['webhookMetadata'],
+		webhookMetadata: this.getNodeParameter(
+			'webhookMetadata',
+			i,
+			'',
+		) as ScrapeParams['webhookMetadata'],
 	};
 }
 
-async function scrapeAndMaybeDownload(this: IExecuteFunctions, i: number, json: IDataObject): Promise<INodeExecutionData> {
+async function scrapeAndMaybeDownload(
+	this: IExecuteFunctions,
+	i: number,
+	json: IDataObject,
+): Promise<INodeExecutionData> {
 	const download = this.getNodeParameter('downloadScreenshot', i, false) as boolean;
 	if (!download) return { json };
 	const binary = await attachScreenshots.call(this, json);
 	return binary ? { json, binary } : { json };
 }
 
-async function runOperation(this: IExecuteFunctions, resource: string, operation: string, i: number): Promise<INodeExecutionData> {
+async function runOperation(
+	this: IExecuteFunctions,
+	resource: string,
+	operation: string,
+	i: number,
+): Promise<INodeExecutionData> {
 	const node = this.getNode();
 	const key = `${resource}:${operation}`;
 	switch (key) {
 		case 'page:scrape': {
 			const body = buildScrapeBody(node, i, scrapeParams.call(this, i)) as unknown as IDataObject;
-			const json = await crawlbruleeRequest.call(this, { method: 'POST', path: '/api/scrape', body, itemIndex: i });
+			const json = await crawlbruleeRequest.call(this, {
+				method: 'POST',
+				path: '/api/scrape',
+				body,
+				itemIndex: i,
+			});
 			return scrapeAndMaybeDownload.call(this, i, json);
 		}
 		case 'page:scrapeAsync': {
-			const body = buildAsyncScrapeBody(node, i, scrapeParams.call(this, i)) as unknown as IDataObject;
-			return { json: await crawlbruleeRequest.call(this, { method: 'POST', path: '/api/scrape/async', body, itemIndex: i }) };
+			const body = buildAsyncScrapeBody(
+				node,
+				i,
+				scrapeParams.call(this, i),
+			) as unknown as IDataObject;
+			return {
+				json: await crawlbruleeRequest.call(this, {
+					method: 'POST',
+					path: '/api/scrape/async',
+					body,
+					itemIndex: i,
+				}),
+			};
 		}
 		case 'job:getScrapeStatus': {
 			const jobId = encodeURIComponent((this.getNodeParameter('jobId', i) as string).trim());
-			return { json: await crawlbruleeRequest.call(this, { method: 'GET', path: `/api/scrape/status/${jobId}`, itemIndex: i }) };
+			return {
+				json: await crawlbruleeRequest.call(this, {
+					method: 'GET',
+					path: `/api/scrape/status/${jobId}`,
+					itemIndex: i,
+				}),
+			};
 		}
 		case 'job:getScrapeResult': {
 			const jobId = encodeURIComponent((this.getNodeParameter('jobId', i) as string).trim());
-			const json = await crawlbruleeRequest.call(this, { method: 'GET', path: `/api/scrape/result/${jobId}`, itemIndex: i });
+			const json = await crawlbruleeRequest.call(this, {
+				method: 'GET',
+				path: `/api/scrape/result/${jobId}`,
+				itemIndex: i,
+			});
 			return scrapeAndMaybeDownload.call(this, i, json);
 		}
 		case 'site:map': {
@@ -106,13 +154,36 @@ async function runOperation(this: IExecuteFunctions, resource: string, operation
 				options: this.getNodeParameter('options', i, {}) as MapParams['options'],
 			};
 			const body = buildMapBody(node, i, params) as unknown as IDataObject;
-			return { json: await crawlbruleeRequest.call(this, { method: 'POST', path: '/api/map', body, itemIndex: i }) };
+			return {
+				json: await crawlbruleeRequest.call(this, {
+					method: 'POST',
+					path: '/api/map',
+					body,
+					itemIndex: i,
+				}),
+			};
 		}
 		case 'account:getUsage':
-			return { json: await crawlbruleeRequest.call(this, { method: 'GET', path: '/api/usage', itemIndex: i }) };
+			return {
+				json: await crawlbruleeRequest.call(this, {
+					method: 'GET',
+					path: '/api/usage',
+					itemIndex: i,
+				}),
+			};
 		case 'account:whoami':
-			return { json: await crawlbruleeRequest.call(this, { method: 'GET', path: '/api/whoami', itemIndex: i }) };
+			return {
+				json: await crawlbruleeRequest.call(this, {
+					method: 'GET',
+					path: '/api/whoami',
+					itemIndex: i,
+				}),
+			};
 		default:
-			throw new NodeOperationError(node, `The operation "${operation}" is not supported for resource "${resource}"`, { itemIndex: i });
+			throw new NodeOperationError(
+				node,
+				`The operation "${operation}" is not supported for resource "${resource}"`,
+				{ itemIndex: i },
+			);
 	}
 }

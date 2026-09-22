@@ -5,8 +5,17 @@ export const proxyOption: INodeProperties = {
 	name: 'proxy',
 	type: 'options',
 	options: [
-		{ name: 'Advanced', value: 'advanced', description: 'Enhanced proxy tier with a higher success rate on hard sites' },
-		{ name: 'Auto', value: 'auto', description: 'Tries Basic first and moves to Advanced on failure. You are billed at the tier that delivered.' },
+		{
+			name: 'Advanced',
+			value: 'advanced',
+			description: 'Enhanced proxy tier with a higher success rate on hard sites',
+		},
+		{
+			name: 'Auto',
+			value: 'auto',
+			description:
+				'Tries Basic first and moves to Advanced on failure. You are billed at the tier that delivered.',
+		},
 		{ name: 'Basic', value: 'basic', description: 'Datacenter proxy tier, lowest cost' },
 	],
 	default: 'auto',
@@ -37,5 +46,6 @@ export const localeOption: INodeProperties = {
 	type: 'string',
 	default: '',
 	placeholder: 'e.g. en-US',
-	description: 'BCP-47 locale sent as Accept-Language and used by the browser when rendering JavaScript',
+	description:
+		'BCP-47 locale sent as Accept-Language and used by the browser when rendering JavaScript',
 };

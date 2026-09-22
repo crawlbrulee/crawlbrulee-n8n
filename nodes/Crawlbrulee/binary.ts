@@ -5,7 +5,11 @@ type BinaryContext = IExecuteFunctions;
 
 async function download(this: BinaryContext, url: string, fileName: string, mime: string) {
 	// signed urls need no auth, so the plain helper is right here
-	const data = (await this.helpers.httpRequest({ url, method: 'GET', encoding: 'arraybuffer' })) as ArrayBuffer;
+	const data = (await this.helpers.httpRequest({
+		url,
+		method: 'GET',
+		encoding: 'arraybuffer',
+	})) as ArrayBuffer;
 	return this.helpers.prepareBinaryData(Buffer.from(data), fileName, mime);
 }
 
@@ -16,7 +20,10 @@ async function download(this: BinaryContext, url: string, fileName: string, mime
  * away page content the user already paid credits for, so each download is caught on
  * its own and the failures are reported on `json.screenshot_download_error`.
  */
-export async function attachScreenshots(this: BinaryContext, json: IDataObject): Promise<IBinaryKeyData | undefined> {
+export async function attachScreenshots(
+	this: BinaryContext,
+	json: IDataObject,
+): Promise<IBinaryKeyData | undefined> {
 	const shot = json.screenshot as ScreenshotResult | undefined;
 	if (!shot?.url) return undefined;
 	const binary: IBinaryKeyData = {};
@@ -32,7 +39,12 @@ export async function attachScreenshots(this: BinaryContext, json: IDataObject):
 
 	await attach('screenshot', shot.url, shot.properties.file_name, shot.properties.mime);
 	for (const slice of shot.slices ?? []) {
-		await attach(`screenshot_slice_${slice.row_nr}`, slice.url, slice.properties.file_name, slice.properties.mime);
+		await attach(
+			`screenshot_slice_${slice.row_nr}`,
+			slice.url,
+			slice.properties.file_name,
+			slice.properties.mime,
+		);
 	}
 
 	if (failures.length > 0) json.screenshot_download_error = failures.join('; ');

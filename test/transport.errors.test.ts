@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { describeApiError } from '../nodes/Crawlbrulee/transport/errors';
 
-const body = (name: string, message = 'msg', details?: Record<string, unknown>) => ({ name, message, details });
+const body = (name: string, message = 'msg', details?: Record<string, unknown>) => ({
+	name,
+	message,
+	details,
+});
 
 describe('describeApiError', () => {
 	it('explains a rejected key', () => {
@@ -21,7 +25,8 @@ describe('describeApiError', () => {
 
 	it('adds the retry hint on 429 when present', () => {
 		expect(
-			describeApiError(429, body('too_many_requests', 'slow down', { retry_after_ms: 1500 })).message,
+			describeApiError(429, body('too_many_requests', 'slow down', { retry_after_ms: 1500 }))
+				.message,
 		).toBe('Crawlbrulee rate limit reached. Retry after 1500 ms.');
 		expect(describeApiError(429, body('too_many_requests', 'slow down')).message).toBe(
 			'Crawlbrulee rate limit reached.',
@@ -29,15 +34,18 @@ describe('describeApiError', () => {
 	});
 
 	it('names the usage reason', () => {
-		expect(describeApiError(402, body('usage_allocation_error', 'x', { reason: 'credit_limit' })).message).toBe(
-			'Out of credits.',
-		);
 		expect(
-			describeApiError(429, body('usage_allocation_error', 'x', { reason: 'concurrency_limit' })).message,
+			describeApiError(402, body('usage_allocation_error', 'x', { reason: 'credit_limit' }))
+				.message,
+		).toBe('Out of credits.');
+		expect(
+			describeApiError(429, body('usage_allocation_error', 'x', { reason: 'concurrency_limit' }))
+				.message,
 		).toBe('Concurrency limit reached.');
-		expect(describeApiError(500, body('usage_allocation_error', 'odd', { reason: 'internal_error' })).message).toBe(
-			'odd',
-		);
+		expect(
+			describeApiError(500, body('usage_allocation_error', 'odd', { reason: 'internal_error' }))
+				.message,
+		).toBe('odd');
 	});
 
 	it('appends the scrape_error hint', () => {
@@ -52,7 +60,9 @@ describe('describeApiError', () => {
 	});
 
 	it('falls back on a non-api body', () => {
-		expect(describeApiError(502, '<html>bad gateway</html>').message).toBe('Crawlbrulee returned HTTP 502.');
+		expect(describeApiError(502, '<html>bad gateway</html>').message).toBe(
+			'Crawlbrulee returned HTTP 502.',
+		);
 		expect(describeApiError(503, undefined).message).toBe('Crawlbrulee returned HTTP 503.');
 	});
 

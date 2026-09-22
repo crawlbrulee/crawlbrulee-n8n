@@ -17,7 +17,9 @@ describe('CrawlbruleeApi credential', () => {
 	});
 
 	it('authenticates with a bearer header and tests against whoami', () => {
-		expect(cred.authenticate.properties.headers?.Authorization).toBe('=Bearer {{$credentials.apiKey}}');
+		expect(cred.authenticate.properties.headers?.Authorization).toBe(
+			'=Bearer {{$credentials.apiKey}}',
+		);
 		expect(cred.test.request.baseURL).toBe('={{$credentials.baseUrl}}');
 		expect(cred.test.request.url).toBe('/api/whoami');
 	});

@@ -23,7 +23,8 @@ export class CrawlbruleeApi implements ICredentialType {
 			typeOptions: { password: true },
 			required: true,
 			default: '',
-			description: 'Your crawlbrulee API key (starts with cwbl_). Create one in the dashboard at dashboard.crawlbrulee.com.',
+			description:
+				'Your crawlbrulee API key (starts with cwbl_). Create one in the dashboard at dashboard.crawlbrulee.com.',
 		},
 		{
 			displayName: 'Base URL',

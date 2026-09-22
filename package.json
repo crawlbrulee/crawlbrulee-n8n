@@ -35,9 +35,11 @@
 		"dev": "n8n-node dev",
 		"lint": "n8n-node lint",
 		"lint:fix": "n8n-node lint --fix",
+		"format": "prettier --write .",
+		"format:check": "prettier --check .",
 		"typecheck": "tsc --noEmit",
 		"test": "vitest --run",
-		"verify": "pnpm lint && pnpm typecheck && pnpm test && pnpm build",
+		"verify": "pnpm lint && pnpm format:check && pnpm typecheck && pnpm test && pnpm build",
 		"prepublishOnly": "n8n-node prerelease"
 	},
 	"files": [

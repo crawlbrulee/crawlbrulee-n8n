@@ -47,7 +47,8 @@ export class CrawlbruleeTrigger implements INodeType {
 				name: 'fetchResult',
 				type: 'boolean',
 				default: false,
-				description: 'Whether to fetch the scrape result when the job succeeded, so the item carries the page content under result',
+				description:
+					'Whether to fetch the scrape result when the job succeeded, so the item carries the page content under result',
 			},
 		],
 	};
@@ -92,7 +93,11 @@ export class CrawlbruleeTrigger implements INodeType {
 			this.logger.warn('crawlbrulee webhook dropped: body is not json');
 			return {};
 		}
-		if (envelope?.event !== 'scrape.complete' || typeof envelope.data !== 'object' || envelope.data === null) {
+		if (
+			envelope?.event !== 'scrape.complete' ||
+			typeof envelope.data !== 'object' ||
+			envelope.data === null
+		) {
 			this.logger.warn('crawlbrulee webhook dropped: not a scrape.complete event');
 			return {};
 		}

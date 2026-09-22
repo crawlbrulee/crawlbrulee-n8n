@@ -11,7 +11,14 @@ import type {
 } from '@crawlbrulee/sdk';
 
 export type ExtractKey = 'markdown' | 'cleaned_html' | 'raw_html' | 'links' | 'images' | 'metadata';
-export const EXTRACT_KEYS: ExtractKey[] = ['markdown', 'cleaned_html', 'raw_html', 'links', 'images', 'metadata'];
+export const EXTRACT_KEYS: ExtractKey[] = [
+	'markdown',
+	'cleaned_html',
+	'raw_html',
+	'links',
+	'images',
+	'metadata',
+];
 
 export type ProxyChoice = 'auto' | 'basic' | 'advanced';
 
@@ -57,7 +64,11 @@ export function isSet(v: unknown): boolean {
 	return v !== undefined && v !== null && v !== '';
 }
 
-function buildScreenshot(node: INode, itemIndex: number, p: ScrapeParams): ScreenshotRequest | undefined {
+function buildScreenshot(
+	node: INode,
+	itemIndex: number,
+	p: ScrapeParams,
+): ScreenshotRequest | undefined {
 	if (p.screenshotType === 'none') return undefined;
 	const o = p.screenshotOptions ?? {};
 	const shot: ScreenshotRequest = { type: p.screenshotType };
@@ -65,13 +76,17 @@ function buildScreenshot(node: INode, itemIndex: number, p: ScrapeParams): Scree
 	const hasWidth = isSet(o.width);
 	const hasHeight = isSet(o.height);
 	if (hasWidth !== hasHeight) {
-		throw new NodeOperationError(node, 'Screenshot Width and Height must be set together', { itemIndex });
+		throw new NodeOperationError(node, 'Screenshot Width and Height must be set together', {
+			itemIndex,
+		});
 	}
 	if (hasWidth && hasHeight) {
 		shot.viewport = { width: Number(o.width), height: Number(o.height) };
 		if (isSet(o.deviceScaleFactor)) shot.viewport.device_scale_factor = Number(o.deviceScaleFactor);
 	} else if (isSet(o.deviceScaleFactor)) {
-		throw new NodeOperationError(node, 'Device Scale Factor needs Screenshot Width and Height', { itemIndex });
+		throw new NodeOperationError(node, 'Device Scale Factor needs Screenshot Width and Height', {
+			itemIndex,
+		});
 	}
 	if (o.deviceMode === 'desktop' || o.deviceMode === 'mobile') shot.device_mode = o.deviceMode;
 
@@ -81,12 +96,15 @@ function buildScreenshot(node: INode, itemIndex: number, p: ScrapeParams): Scree
 	}
 	if (actions.length > 0) {
 		shot.actions_before = actions.map<ScreenshotBeforeAction>((a) =>
-			a.type === 'wait' ? { type: 'wait', ms: Number(a.value) } : { type: 'scroll', pixels: Number(a.value) },
+			a.type === 'wait'
+				? { type: 'wait', ms: Number(a.value) }
+				: { type: 'scroll', pixels: Number(a.value) },
 		);
 	}
 	if (isSet(o.sliceHeight)) {
 		const height = Number(o.sliceHeight);
-		if (height < 500) throw new NodeOperationError(node, 'Slice Height must be at least 500 pixels', { itemIndex });
+		if (height < 500)
+			throw new NodeOperationError(node, 'Slice Height must be at least 500 pixels', { itemIndex });
 		shot.actions_after = [{ type: 'slice', height }];
 	}
 	return shot;
@@ -128,7 +146,11 @@ export function buildScrapeBody(node: INode, itemIndex: number, p: ScrapeParams)
 	return body;
 }
 
-function parseMetadata(node: INode, itemIndex: number, raw: ScrapeParams['webhookMetadata']): Record<string, unknown> | undefined {
+function parseMetadata(
+	node: INode,
+	itemIndex: number,
+	raw: ScrapeParams['webhookMetadata'],
+): Record<string, unknown> | undefined {
 	if (raw === undefined || raw === null || raw === '') return undefined;
 	if (typeof raw === 'object') return raw;
 	let parsed: unknown;
@@ -139,16 +161,22 @@ function parseMetadata(node: INode, itemIndex: number, raw: ScrapeParams['webhoo
 	} catch {
 		ok = false;
 	}
-	if (!ok) throw new NodeOperationError(node, 'Webhook Metadata must be a JSON object', { itemIndex });
+	if (!ok)
+		throw new NodeOperationError(node, 'Webhook Metadata must be a JSON object', { itemIndex });
 	return parsed as Record<string, unknown>;
 }
 
-export function buildAsyncScrapeBody(node: INode, itemIndex: number, p: ScrapeParams): AsyncScrapeRequest {
+export function buildAsyncScrapeBody(
+	node: INode,
+	itemIndex: number,
+	p: ScrapeParams,
+): AsyncScrapeRequest {
 	const body: AsyncScrapeRequest = buildScrapeBody(node, itemIndex, p);
 	const url = (p.webhookUrl ?? '').trim();
 	const metadata = parseMetadata(node, itemIndex, p.webhookMetadata);
 	if (!url) {
-		if (metadata) throw new NodeOperationError(node, 'Webhook Metadata needs a Webhook URL', { itemIndex });
+		if (metadata)
+			throw new NodeOperationError(node, 'Webhook Metadata needs a Webhook URL', { itemIndex });
 		return body;
 	}
 	body.webhook = metadata ? { url, metadata } : { url };

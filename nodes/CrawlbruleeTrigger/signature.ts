@@ -60,7 +60,13 @@ function constantTimeEqual(a: string, b: string): boolean {
 
 async function hmacHex(secret: string, message: string): Promise<string> {
 	const encoder = new TextEncoder();
-	const key = await crypto.subtle.importKey('raw', encoder.encode(secret), { name: 'HMAC', hash: 'SHA-256' }, false, ['sign']);
+	const key = await crypto.subtle.importKey(
+		'raw',
+		encoder.encode(secret),
+		{ name: 'HMAC', hash: 'SHA-256' },
+		false,
+		['sign'],
+	);
 	const digest = await crypto.subtle.sign('HMAC', key, encoder.encode(message));
 	return toHex(new Uint8Array(digest));
 }
@@ -72,7 +78,8 @@ export async function verifySignature(args: VerifySignatureArgs): Promise<Signat
 		['primary', getHeader(args.headers, SIGNATURE_HEADER)],
 		['rotated', getHeader(args.headers, ROTATED_HEADER)],
 	];
-	if (candidates.every(([, v]) => v === undefined)) return { verified: false, reason: 'missing_signature' };
+	if (candidates.every(([, v]) => v === undefined))
+		return { verified: false, reason: 'missing_signature' };
 
 	let failure: SignatureFailure = 'malformed_signature';
 	const worse = (candidate: SignatureFailure) => {

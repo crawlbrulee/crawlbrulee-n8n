@@ -32,7 +32,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Verify (lint, typecheck, test, build)
+      - name: Check formatting
+        run: pnpm format:check
+
+      - name: Verify (lint, format, typecheck, test, build)
         run: pnpm verify
 
       - name: Tarball holds only dist, README and LICENSE

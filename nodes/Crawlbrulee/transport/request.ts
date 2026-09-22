@@ -8,7 +8,11 @@ import type {
 } from 'n8n-workflow';
 import { toNodeApiError } from './errors';
 
-export type CrawlbruleeContext = IExecuteFunctions | IWebhookFunctions | IHookFunctions | ILoadOptionsFunctions;
+export type CrawlbruleeContext =
+	| IExecuteFunctions
+	| IWebhookFunctions
+	| IHookFunctions
+	| ILoadOptionsFunctions;
 
 export const USER_AGENT = 'n8n-nodes-crawlbrulee/0.1.0';
 
@@ -30,9 +34,16 @@ function stripTrailingSlash(url: string): string {
 }
 
 /** The one place this package talks to the crawlbrulee api. */
-export async function crawlbruleeRequest(this: CrawlbruleeContext, args: CrawlbruleeRequestArgs): Promise<IDataObject> {
-	const credentials = (await this.getCredentials('crawlbruleeApi')) as unknown as CrawlbruleeCredentials;
-	const baseUrl = stripTrailingSlash((credentials.baseUrl ?? '').trim() || 'https://api.crawlbrulee.com');
+export async function crawlbruleeRequest(
+	this: CrawlbruleeContext,
+	args: CrawlbruleeRequestArgs,
+): Promise<IDataObject> {
+	const credentials = (await this.getCredentials(
+		'crawlbruleeApi',
+	)) as unknown as CrawlbruleeCredentials;
+	const baseUrl = stripTrailingSlash(
+		(credentials.baseUrl ?? '').trim() || 'https://api.crawlbrulee.com',
+	);
 
 	const options: IHttpRequestOptions = {
 		method: args.method,
@@ -44,7 +55,11 @@ export async function crawlbruleeRequest(this: CrawlbruleeContext, args: Crawlbr
 	};
 	if (args.body !== undefined) options.body = args.body;
 
-	const response = (await this.helpers.httpRequestWithAuthentication.call(this, 'crawlbruleeApi', options)) as {
+	const response = (await this.helpers.httpRequestWithAuthentication.call(
+		this,
+		'crawlbruleeApi',
+		options,
+	)) as {
 		statusCode: number;
 		body: unknown;
 	};

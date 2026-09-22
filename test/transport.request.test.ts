@@ -3,11 +3,20 @@ import { NodeApiError } from 'n8n-workflow';
 import { crawlbruleeRequest, USER_AGENT } from '../nodes/Crawlbrulee/transport/request';
 import pkg from '../package.json';
 
-function ctx(response: { statusCode: number; body: unknown }, baseUrl = 'https://api.crawlbrulee.com/') {
+function ctx(
+	response: { statusCode: number; body: unknown },
+	baseUrl = 'https://api.crawlbrulee.com/',
+) {
 	const httpRequestWithAuthentication = vi.fn().mockResolvedValue(response);
 	return {
 		self: {
-			getNode: () => ({ name: 'Crawlbrulee', type: 'crawlbrulee', typeVersion: 1, position: [0, 0], parameters: {} }),
+			getNode: () => ({
+				name: 'Crawlbrulee',
+				type: 'crawlbrulee',
+				typeVersion: 1,
+				position: [0, 0],
+				parameters: {},
+			}),
 			getCredentials: vi.fn().mockResolvedValue({ apiKey: 'k', baseUrl, webhookSecret: '' }),
 			helpers: { httpRequestWithAuthentication },
 		} as never,
@@ -24,7 +33,11 @@ describe('USER_AGENT', () => {
 describe('crawlbruleeRequest', () => {
 	it('posts json through the authenticated helper and returns the body', async () => {
 		const { self, httpRequestWithAuthentication } = ctx({ statusCode: 200, body: { ok: true } });
-		const out = await crawlbruleeRequest.call(self, { method: 'POST', path: '/api/scrape', body: { url: 'https://x' } });
+		const out = await crawlbruleeRequest.call(self, {
+			method: 'POST',
+			path: '/api/scrape',
+			body: { url: 'https://x' },
+		});
 		expect(out).toEqual({ ok: true });
 		expect(httpRequestWithAuthentication).toHaveBeenCalledWith('crawlbruleeApi', {
 			method: 'POST',
@@ -44,7 +57,10 @@ describe('crawlbruleeRequest', () => {
 	});
 
 	it('maps a non-2xx to NodeApiError with the item index', async () => {
-		const { self } = ctx({ statusCode: 429, body: { name: 'too_many_requests', message: 'x', details: { retry_after_ms: 10 } } });
+		const { self } = ctx({
+			statusCode: 429,
+			body: { name: 'too_many_requests', message: 'x', details: { retry_after_ms: 10 } },
+		});
 		await expect(
 			crawlbruleeRequest.call(self, { method: 'GET', path: '/api/usage', itemIndex: 3 }),
 		).rejects.toMatchObject({
@@ -52,7 +68,9 @@ describe('crawlbruleeRequest', () => {
 			httpCode: '429',
 			context: { itemIndex: 3 },
 		});
-		await expect(crawlbruleeRequest.call(self, { method: 'GET', path: '/api/usage' })).rejects.toBeInstanceOf(NodeApiError);
+		await expect(
+			crawlbruleeRequest.call(self, { method: 'GET', path: '/api/usage' }),
+		).rejects.toBeInstanceOf(NodeApiError);
 	});
 
 	it('falls back to the default base url when the credential base url is blank', async () => {

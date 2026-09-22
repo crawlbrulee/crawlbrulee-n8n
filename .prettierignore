@@ -1,0 +1,8 @@
+node_modules
+dist
+coverage
+pnpm-lock.yaml
+docs
+
+# prettier reflows the tables and fenced blocks in these; keep them hand-written
+*.md

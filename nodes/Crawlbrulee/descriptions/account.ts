@@ -11,7 +11,8 @@ export const accountOperations: INodeProperties = {
 			name: 'Get Usage',
 			value: 'getUsage',
 			action: 'Get credit usage',
-			description: 'Credits used and left in the current billing cycle, plus concurrency and the reset date',
+			description:
+				'Credits used and left in the current billing cycle, plus concurrency and the reset date',
 		},
 		{
 			name: 'Whoami',

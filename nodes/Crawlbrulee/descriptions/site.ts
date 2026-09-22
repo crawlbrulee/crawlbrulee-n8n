@@ -74,7 +74,8 @@ export const siteFields: INodeProperties[] = [
 				type: 'number',
 				typeOptions: { minValue: 1, maxValue: 100000 },
 				default: 5000,
-				description: 'Stop discovery after this many URLs. A smaller value is a cheaper, faster map.',
+				description:
+					'Stop discovery after this many URLs. A smaller value is a cheaper, faster map.',
 			},
 			{
 				displayName: 'Page',
