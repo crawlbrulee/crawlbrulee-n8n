@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [22, 24]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js ${{ matrix.node-version }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Verify (lint, typecheck, test, build)
+        run: pnpm verify
+
+      - name: Tarball holds only dist, README and LICENSE
+        run: |
+          npm pack --dry-run --json | node -e '
+            const [pkg] = JSON.parse(require("fs").readFileSync(0, "utf8"));
+            const bad = pkg.files.map(f => f.path).filter(p => !/^(dist\/|README\.md$|LICENSE$|package\.json$)/.test(p));
+            if (bad.length) { console.error("unexpected files in tarball:", bad); process.exit(1); }
+          '
