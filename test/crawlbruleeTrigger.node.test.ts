@@ -61,6 +61,14 @@ describe('CrawlbruleeTrigger', () => {
 		expect(bad.warn).toHaveBeenCalledWith(expect.stringMatching(/dropped.*timestamp_out_of_tolerance|dropped.*signature_mismatch/));
 	});
 
+	it('drops a delivery with no signature at all when a secret is set', async () => {
+		const raw = envelope('evt_unsigned');
+		const unsigned = ctx(raw, {}, { secret });
+		const out = await node.webhook.call(unsigned.self);
+		expect(out.workflowData).toBeUndefined();
+		expect(unsigned.warn).toHaveBeenCalledWith(expect.stringContaining('missing_signature'));
+	});
+
 	it('drops repeats of the same event id', async () => {
 		const raw = envelope('evt_3');
 		const { self, staticData } = ctx(raw, { 'x-cwbl-event-id': 'evt_3' });

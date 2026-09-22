@@ -94,6 +94,12 @@ function buildScreenshot(node: INode, itemIndex: number, p: ScrapeParams): Scree
 
 export function buildScrapeBody(node: INode, itemIndex: number, p: ScrapeParams): ScrapeRequest {
 	const chosen = new Set(p.extract ?? []);
+	if (chosen.size === 0 && p.screenshotType === 'none') {
+		throw new NodeOperationError(node, 'Pick at least one Extract output or a Screenshot', {
+			itemIndex,
+			description: 'The request would ask for nothing.',
+		});
+	}
 	const extract: ScrapeExtract = {};
 	for (const key of EXTRACT_KEYS) extract[key] = chosen.has(key);
 	const screenshot = buildScreenshot(node, itemIndex, p);

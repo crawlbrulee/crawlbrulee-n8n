@@ -80,6 +80,14 @@ describe('buildScrapeBody', () => {
 		expect(() => buildScrapeBody(node, 2, base({ screenshotType: 'viewport', screenshotOptions: { deviceScaleFactor: 2 } }))).toThrow(/Width and Height/);
 	});
 
+	it('rejects a request that asks for nothing', () => {
+		expect(() => buildScrapeBody(node, 2, base({ extract: [], screenshotType: 'none' }))).toThrow(
+			/Pick at least one Extract output or a Screenshot/,
+		);
+		expect(() => buildScrapeBody(node, 2, base({ extract: [], screenshotType: 'viewport' }))).not.toThrow();
+		expect(() => buildAsyncScrapeBody(node, 2, base({ extract: [], screenshotType: 'none' }))).toThrow(NodeOperationError);
+	});
+
 	it('rejects more than 5 actions and a slice under 500', () => {
 		const six = { action: Array.from({ length: 6 }, () => ({ type: 'wait' as const, value: 1 })) };
 		expect(() => buildScrapeBody(node, 0, base({ screenshotType: 'viewport', screenshotOptions: { actionsBefore: six } }))).toThrow(/at most 5/);

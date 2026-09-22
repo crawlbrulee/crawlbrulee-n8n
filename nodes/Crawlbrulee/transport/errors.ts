@@ -37,7 +37,7 @@ export function describeApiError(status: number, body: unknown): { message: stri
 			if (details.reason === 'concurrency_limit') return { message: 'Concurrency limit reached.', description };
 			return { message: body.message, description };
 		case 'scrape_error':
-			return { message: `${body.message} ${SCRAPE_HINT}`, description };
+			return { message: `${body.message.replace(/[.\s]*$/, '')}. ${SCRAPE_HINT}`, description };
 		default:
 			return { message: body.message || `Crawlbrulee returned HTTP ${status}.`, description };
 	}

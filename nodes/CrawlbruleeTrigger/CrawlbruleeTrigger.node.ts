@@ -97,7 +97,7 @@ export class CrawlbruleeTrigger implements INodeType {
 			return {};
 		}
 
-		const eventId = getHeader(headers, EVENT_ID_HEADER) ?? envelope.event_id;
+		const eventId = getHeader(headers, EVENT_ID_HEADER) || envelope.event_id;
 		if (eventId && isDuplicate(this.getWorkflowStaticData('node'), eventId)) {
 			return {};
 		}
@@ -116,7 +116,7 @@ export class CrawlbruleeTrigger implements INodeType {
 					path: `/api/scrape/result/${encodeURIComponent(envelope.data.job_id)}`,
 				});
 			} catch (error) {
-				json.result_error = (error as Error).message;
+				json.result_error = error instanceof Error ? error.message : String(error);
 			}
 		}
 

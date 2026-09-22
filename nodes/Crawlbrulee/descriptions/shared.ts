@@ -5,7 +5,7 @@ export const proxyOption: INodeProperties = {
 	name: 'proxy',
 	type: 'options',
 	options: [
-		{ name: 'Advanced', value: 'advanced', description: 'Residential proxy tier with a higher success rate on hard sites' },
+		{ name: 'Advanced', value: 'advanced', description: 'Enhanced proxy tier with a higher success rate on hard sites' },
 		{ name: 'Auto', value: 'auto', description: 'Tries Basic first and moves to Advanced on failure. You are billed at the tier that delivered.' },
 		{ name: 'Basic', value: 'basic', description: 'Datacenter proxy tier, lowest cost' },
 	],

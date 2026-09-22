@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { NodeApiError } from 'n8n-workflow';
 import { crawlbruleeRequest, USER_AGENT } from '../nodes/Crawlbrulee/transport/request';
+import pkg from '../package.json';
 
 function ctx(response: { statusCode: number; body: unknown }, baseUrl = 'https://api.crawlbrulee.com/') {
 	const httpRequestWithAuthentication = vi.fn().mockResolvedValue(response);
@@ -13,6 +14,12 @@ function ctx(response: { statusCode: number; body: unknown }, baseUrl = 'https:/
 		httpRequestWithAuthentication,
 	};
 }
+
+describe('USER_AGENT', () => {
+	it('carries the package version', () => {
+		expect(USER_AGENT).toBe(`n8n-nodes-crawlbrulee/${pkg.version}`);
+	});
+});
 
 describe('crawlbruleeRequest', () => {
 	it('posts json through the authenticated helper and returns the body', async () => {

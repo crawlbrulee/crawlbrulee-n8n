@@ -42,7 +42,7 @@ describe('describeApiError', () => {
 
 	it('appends the scrape_error hint', () => {
 		expect(describeApiError(500, body('scrape_error', 'Fetch failed')).message).toBe(
-			'Fetch failed The Advanced proxy tier has a higher success rate; enable Require JS for JavaScript-rendered content.',
+			'Fetch failed. The Advanced proxy tier has a higher success rate; enable Require JS for JavaScript-rendered content.',
 		);
 	});
 

@@ -45,7 +45,7 @@ describe('Crawlbrulee node', () => {
 
 	it('routes every operation to its endpoint', async () => {
 		const cases: Array<[Params, string, string]> = [
-			[{ resource: 'page', operation: 'scrapeAsync', url: 'https://x', extract: [], screenshotType: 'none', screenshotOptions: {}, options: {}, webhookUrl: '', webhookMetadata: '' }, 'POST', '/api/scrape/async'],
+			[{ resource: 'page', operation: 'scrapeAsync', url: 'https://x', extract: ['markdown'], screenshotType: 'none', screenshotOptions: {}, options: {}, webhookUrl: '', webhookMetadata: '' }, 'POST', '/api/scrape/async'],
 			[{ resource: 'job', operation: 'getScrapeStatus', jobId: 'job 1' }, 'GET', '/api/scrape/status/job%201'],
 			[{ resource: 'job', operation: 'getScrapeResult', jobId: 'j' }, 'GET', '/api/scrape/result/j'],
 			[{ resource: 'site', operation: 'map', url: 'https://x', options: {} }, 'POST', '/api/map'],
