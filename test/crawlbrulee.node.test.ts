@@ -40,6 +40,18 @@ function ctx(
 
 const node = new Crawlbrulee();
 
+// A 404 page: billed like any page, so every cost part is filled in.
+const usage404 = {
+	total_credit_cost: 15,
+	engine_credit_cost: 3,
+	proxy_multiplier: 5,
+	screenshot_slicing_credit_cost: 0,
+	engine: 'browser',
+	proxy: 'advanced',
+	credits: 15,
+	screenshot_slices: 0,
+};
+
 describe('Crawlbrulee node', () => {
 	it('describes itself for verification', () => {
 		expect(node.description.name).toBe('crawlbrulee');
@@ -114,6 +126,97 @@ describe('Crawlbrulee node', () => {
 			expect(call.method).toBe(method);
 			expect(call.url).toBe(`https://api.crawlbrulee.com${path}`);
 		}
+	});
+
+	it('returns a page the site answered with 404 as a normal item, fields untouched', async () => {
+		const page = {
+			url: 'https://example.com/missing',
+			requested_url: 'https://example.com/missing',
+			page_status_code: 404,
+			content_type: 'text/html',
+			markdown: '# Page not found',
+			response_meta: { usage: usage404 },
+			warnings: [],
+			some_future_field: { kept: true },
+		};
+		const cases: Params[] = [
+			{
+				resource: 'scrape',
+				operation: 'scrape',
+				url: 'https://example.com/missing',
+				extract: ['markdown'],
+				screenshotType: 'none',
+				screenshotOptions: {},
+				options: {},
+			},
+			{ resource: 'scrape', operation: 'getScrapeResult', jobId: 'j' },
+		];
+		for (const params of cases) {
+			const { self } = ctx(params, { statusCode: 200, body: page });
+			const [out] = await node.execute.call(self);
+			expect(out).toHaveLength(1);
+			expect(out[0].json).toEqual(page);
+			expect(out[0].json).not.toHaveProperty('error');
+		}
+	});
+
+	it('passes the map usage fields through', async () => {
+		const body = {
+			links: [],
+			response_meta: {
+				usage: {
+					total_credit_cost: 1,
+					engine_credit_cost: 1,
+					proxy_multiplier: 1,
+					engine: 'http',
+					proxy: 'basic',
+					credits: 1,
+				},
+			},
+		};
+		const { self } = ctx(
+			{ resource: 'map', operation: 'map', url: 'https://x', options: {} },
+			{ statusCode: 200, body },
+		);
+		const [out] = await node.execute.call(self);
+		expect(out[0].json).toEqual(body);
+	});
+
+	it('still reads an older response without page_status_code or the new usage fields', async () => {
+		const body = {
+			url: 'https://x',
+			markdown: '# hi',
+			response_meta: {
+				usage: { credits: 1, engine: 'http', proxy: 'basic', screenshot_slices: 0 },
+			},
+		};
+		const { self } = ctx(
+			{ resource: 'scrape', operation: 'getScrapeResult', jobId: 'j' },
+			{ statusCode: 200, body },
+		);
+		const [out] = await node.execute.call(self);
+		expect(out[0].json).toEqual(body);
+	});
+
+	it('fails the item on a 502 target_unreachable, or records it with continueOnFail', async () => {
+		const params = {
+			resource: 'scrape',
+			operation: 'scrape',
+			url: 'https://nowhere.invalid',
+			extract: ['markdown'],
+			screenshotType: 'none',
+			screenshotOptions: {},
+			options: {},
+		};
+		const bad = {
+			statusCode: 502,
+			body: { name: 'target_unreachable', message: 'Could not reach the target site.' },
+		};
+		await expect(node.execute.call(ctx(params, bad).self)).rejects.toThrow(
+			/could not reach the target site/,
+		);
+		const [out] = await node.execute.call(ctx(params, bad, 1, true).self);
+		expect(out[0].json.error).toMatch(/could not reach the target site/);
 	});
 
 	it('attaches binary when Download Screenshot is on', async () => {

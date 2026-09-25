@@ -66,9 +66,31 @@ turn on **Download Screenshot** — it's on **Scrape URL** and on **Get Scrape R
 
 ### what comes back
 
-one item in, one item out: the api's json body becomes the item's `json`, unchanged. scrape, map and finished-job responses carry `response_meta.usage`, so the credits a call cost are in front of you. **Map Website** adds `pagination` and `truncation` there, and its **Limit** starts at 50 in n8n, not the api's 5000 — n8n's rule for a field named Limit sets that, so raising it is usually the first thing you do. the [api docs](https://crawlbrulee.com/docs) have the full response shape.
+one item in, one item out: the api's json body becomes the item's `json`, unchanged. **Map Website** adds `pagination` and `truncation` under `response_meta`, and its **Limit** starts at 50 in n8n, not the api's 5000 — n8n's rule for a field named Limit sets that, so raising it is usually the first thing you do. the [api docs](https://crawlbrulee.com/docs) have the full response shape.
 
 set the node's "On Error" setting to continue and a failed item comes back as `{ "error": "…" }` instead of stopping the run.
+
+### the page's own status
+
+**Scrape URL** and **Get Scrape Result** put the HTTP status the site answered with in `page_status_code`, next to `url`. it is the status of the final page, after redirects.
+
+a page the site really served is a normal item, whatever its status. a 404, 410 or 503 page comes back with its content, like any other page. it is not a node error, so "On Error" never sees it. when the status matters to your workflow, check it before you use the content — for example an **If** node on `{{ $json.page_status_code }}` is less than 400.
+
+### what a call cost
+
+scrape, map and finished-job responses carry `response_meta.usage`, so the cost of each call is in front of you:
+
+| field | what it is |
+|---|---|
+| `total_credit_cost` | credits this call cost |
+| `engine_credit_cost` | the engine's base price: 1 for `http`, 3 for `browser`, 5 for `screenshot`, 0 for `cache` |
+| `proxy_multiplier` | 1 for the Basic proxy tier, 5 for Advanced |
+| `screenshot_slicing_credit_cost` | 1 when the screenshot was cut into slices on this call, else 0 (reusing slices from the cache costs 0). not on **Map Website** |
+| `engine`, `proxy` | the engine and the proxy tier that did the work |
+
+`total_credit_cost` is always `engine_credit_cost × proxy_multiplier + screenshot_slicing_credit_cost`. a page we don't bill, such as one the site answered with a 5xx status, has 0 in every `*_credit_cost` field. the [credits and pricing](https://crawlbrulee.com/docs/credits-and-pricing) page lists what is billed.
+
+`credits` and `screenshot_slices` are still there, with the same values as `total_credit_cost` and `screenshot_slicing_credit_cost`. they are deprecated and will be removed in a future version, so read the new names in new workflows.
 
 ## the crawlbrulee Trigger
 
@@ -78,13 +100,13 @@ use it to react to a background scrape instead of polling for it:
 2. paste that url into the **Webhook URL** field of a **Scrape URL (Async)** operation.
 3. when the job finishes, we post one `scrape.complete` event there and the trigger fires.
 
-the item carries the event id, the timestamp and the job data. turn on **Fetch Result** and, for a job that succeeded, the trigger fetches the page content into `result`; if that fetch fails, the reason lands in `result_error` and the item still comes through.
+the item carries the event id, the timestamp and the job data. a job that got a page has status `success` and the page's HTTP status in `page_status_code`, so a 404 page arrives as `success` too. turn on **Fetch Result** and, for a job that succeeded, the trigger fetches the page content into `result`; if that fetch fails, the reason lands in `result_error` and the item still comes through.
 
 with the secret set, the trigger checks the HMAC-SHA256 signature on every delivery. it drops one that fails the check, one that isn't a `scrape.complete` event, and one whose event id is among the last 500 it saw: nothing runs, and we still answer 200 so it is not retried. that id list lives in the node's workflow data, so a fresh copy of the workflow starts empty.
 
 ## errors
 
-the node turns api errors into messages you can act on: a rate limit says how long to wait, out of credits and concurrency limit are each named, an anti-bot block says so with no retry hint, and a scrape error points you at the Advanced proxy tier and at Require JS. the raw response stays on the error for the n8n error view, and every error name is in the [error reference](https://crawlbrulee.com/docs/errors).
+the node turns api errors into messages you can act on: a rate limit says how long to wait, out of credits and concurrency limit are each named, an anti-bot block says so with no retry hint, a scrape error points you at the Advanced proxy tier and at Require JS, and a site we could not reach at all (for example it timed out, or its certificate is bad) tells you to check the url and try again later. the raw response stays on the error for the n8n error view, and every error name is in the [error reference](https://crawlbrulee.com/docs/errors).
 
 ## development
 

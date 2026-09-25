@@ -69,6 +69,19 @@ describe('crawlbrulee node properties', () => {
 		expect(jobDownload.default).toBe(false);
 	});
 
+	it('tells the user where the page status is, on the operations that return a page', () => {
+		const notice = find('pageStatusNotice')[0];
+		expect(notice.type).toBe('notice');
+		expect(notice.displayOptions?.show?.resource).toEqual(['scrape']);
+		expect(notice.displayOptions?.show?.operation).toEqual(['scrape', 'getScrapeResult']);
+		expect(notice.displayName).toContain('page_status_code');
+		const ops = find('operation', (p) => p.displayOptions?.show?.resource?.[0] === 'scrape')[0]
+			.options as INodePropertyOptions[];
+		for (const value of ['scrape', 'getScrapeResult']) {
+			expect(ops.find((o) => o.value === value)?.description).toContain('page_status_code');
+		}
+	});
+
 	it('has a job id field on both job operations of the scrape resource', () => {
 		expect(find('jobId')[0].displayOptions?.show?.resource).toEqual(['scrape']);
 		expect(find('jobId')[0].displayOptions?.show?.operation?.sort()).toEqual([

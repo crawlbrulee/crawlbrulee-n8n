@@ -68,6 +68,7 @@ describe('CrawlbruleeTrigger', () => {
 		expect(node.description.displayName).toBe('crawlbrulee Trigger');
 		expect(node.description.inputs).toEqual([]);
 		expect(node.description.usableAsTool).toBeUndefined();
+		expect(node.description.properties[0].displayName).toContain('page_status_code');
 		expect(node.description.webhooks?.[0]).toMatchObject({
 			httpMethod: 'POST',
 			responseMode: 'onReceived',
@@ -91,6 +92,57 @@ describe('CrawlbruleeTrigger', () => {
 			job_id: 'job_1',
 			status: 'success',
 		});
+	});
+
+	it('passes page_status_code, the usage fields and unknown fields through', async () => {
+		const usage = {
+			total_credit_cost: 1,
+			engine_credit_cost: 1,
+			proxy_multiplier: 1,
+			screenshot_slicing_credit_cost: 0,
+			engine: 'http',
+			proxy: 'basic',
+			credits: 1,
+			screenshot_slices: 0,
+		};
+		const raw = JSON.stringify({
+			event_id: 'evt_404',
+			timestamp: '2026-09-25T00:00:00Z',
+			event: 'scrape.complete',
+			data: {
+				job_id: 'job_404',
+				status: 'success',
+				url: 'https://x/missing',
+				page_status_code: 404,
+				completed_at: '2026-09-25T00:00:01Z',
+				response_meta: { usage },
+				some_future_field: 'kept',
+			},
+		});
+		const out = await node.webhook.call(ctx(raw, {}).self);
+		expect(out.workflowData?.[0][0].json).toEqual({
+			event_id: 'evt_404',
+			timestamp: '2026-09-25T00:00:00Z',
+			job_id: 'job_404',
+			status: 'success',
+			url: 'https://x/missing',
+			page_status_code: 404,
+			completed_at: '2026-09-25T00:00:01Z',
+			response_meta: { usage },
+			some_future_field: 'kept',
+		});
+	});
+
+	it('fetches the result for a 404 page like any finished job', async () => {
+		const raw = JSON.stringify({
+			event_id: 'evt_404b',
+			timestamp: '2026-09-25T00:00:00Z',
+			event: 'scrape.complete',
+			data: { job_id: 'job_404', status: 'success', url: 'https://x', page_status_code: 404 },
+		});
+		const result = { url: 'https://x', page_status_code: 404, markdown: '# Not found' };
+		const out = await node.webhook.call(ctx(raw, {}, { fetchResult: true, result }).self);
+		expect(out.workflowData?.[0][0].json.result).toEqual(result);
 	});
 
 	it('verifies with the secret and drops bad signatures with a warning', async () => {

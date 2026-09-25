@@ -1,12 +1,23 @@
 import type { INode, JsonObject } from 'n8n-workflow';
 import { NodeApiError } from 'n8n-workflow';
-import type { ApiErrorResponse } from '@crawlbrulee/sdk';
 
 const KEY_REJECTED = 'crawlbrulee rejected the API key. Check the key on the credential.';
+const UNREACHABLE =
+	'crawlbrulee could not reach the target site. Check the URL. If it is right, the site may be down or slow, so try again later. This costs no credits.';
 const SCRAPE_HINT =
 	'The Advanced proxy tier has a higher success rate; enable Require JS for JavaScript-rendered content.';
 
-function isApiErrorBody(body: unknown): body is ApiErrorResponse {
+/**
+ * The api error body. Kept local and loose on purpose: `name` is any string, so an error
+ * name the api adds later still reads as an api error instead of a bare HTTP status.
+ */
+interface ApiErrorBody {
+	name: string;
+	message: string;
+	details?: unknown;
+}
+
+function isApiErrorBody(body: unknown): body is ApiErrorBody {
 	return (
 		typeof body === 'object' &&
 		body !== null &&
@@ -46,6 +57,8 @@ export function describeApiError(
 			if (details.reason === 'concurrency_limit')
 				return { message: 'Concurrency limit reached.', description };
 			return { message: body.message, description };
+		case 'target_unreachable':
+			return { message: UNREACHABLE, description };
 		case 'scrape_error':
 			return { message: `${body.message.replace(/[.\s]*$/, '')}. ${SCRAPE_HINT}`, description };
 		default:

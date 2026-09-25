@@ -73,6 +73,19 @@ describe('crawlbruleeRequest', () => {
 		).rejects.toBeInstanceOf(NodeApiError);
 	});
 
+	it('maps a 502 target_unreachable to NodeApiError', async () => {
+		const { self } = ctx({
+			statusCode: 502,
+			body: { name: 'target_unreachable', message: 'Could not reach the target site.' },
+		});
+		await expect(
+			crawlbruleeRequest.call(self, { method: 'POST', path: '/api/scrape', itemIndex: 0 }),
+		).rejects.toMatchObject({
+			message: expect.stringMatching(/^crawlbrulee could not reach the target site\./),
+			httpCode: '502',
+		});
+	});
+
 	it('falls back to the default base url when the credential base url is blank', async () => {
 		const { self, httpRequestWithAuthentication } = ctx({ statusCode: 200, body: {} }, '');
 		await crawlbruleeRequest.call(self, { method: 'GET', path: '/api/usage' });

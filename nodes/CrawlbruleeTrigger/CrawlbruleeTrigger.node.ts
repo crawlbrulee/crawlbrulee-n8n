@@ -37,7 +37,7 @@ export class CrawlbruleeTrigger implements INodeType {
 		properties: [
 			{
 				displayName:
-					"Copy this node's webhook URL into the Webhook URL field of a Scrape URL (Async) operation. Each finished job posts one scrape.complete event here. Set the Webhook Signing Secret on the credential to verify deliveries.",
+					"Copy this node's webhook URL into the Webhook URL field of a Scrape URL (Async) operation. Each finished job posts one scrape.complete event here. Set the Webhook Signing Secret on the credential to verify deliveries. A page the site answers with an error, like a 404, still arrives with status success; its HTTP status is in page_status_code.",
 				name: 'notice',
 				type: 'notice',
 				default: '',

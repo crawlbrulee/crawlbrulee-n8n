@@ -54,6 +54,18 @@ describe('describeApiError', () => {
 		);
 	});
 
+	it('explains an unreachable site with a retry hint', () => {
+		const r = describeApiError(502, body('target_unreachable', 'Could not reach the target site.'));
+		expect(r.message).toBe(
+			'crawlbrulee could not reach the target site. Check the URL. If it is right, the site may be down or slow, so try again later. This costs no credits.',
+		);
+		expect(r.description).toContain('"target_unreachable"');
+	});
+
+	it('passes an error name it does not know through', () => {
+		expect(describeApiError(418, body('some_new_error', 'New thing')).message).toBe('New thing');
+	});
+
 	it('passes other api messages through', () => {
 		expect(describeApiError(400, body('invalid_url', 'Not a url')).message).toBe('Not a url');
 		expect(describeApiError(422, body('page_too_large', 'Too big')).message).toBe('Too big');

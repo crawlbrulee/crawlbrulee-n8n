@@ -17,7 +17,8 @@ export const scrapeOperations: INodeProperties = {
 			name: 'Get Scrape Result',
 			value: 'getScrapeResult',
 			action: 'Get scrape result',
-			description: 'Fetch the content of a finished async scrape',
+			description:
+				"Fetch the content of a finished async scrape. The site's own HTTP status is in page_status_code.",
 		},
 		{
 			name: 'Get Scrape Status',
@@ -29,7 +30,8 @@ export const scrapeOperations: INodeProperties = {
 			name: 'Scrape URL',
 			value: 'scrape',
 			action: 'Scrape URL',
-			description: 'Fetch one URL and return the requested content',
+			description:
+				"Fetch one URL and return the requested content. The site's own HTTP status is in page_status_code.",
 		},
 		{
 			name: 'Scrape URL (Async)',
@@ -43,6 +45,17 @@ export const scrapeOperations: INodeProperties = {
 };
 
 export const scrapeFields: INodeProperties[] = [
+	{
+		// A page the site answers with an error status (404, 410, 503…) is data, not a failure:
+		// the api returns it with 200, so the item goes out on the normal path and On Error never
+		// sees it. Say so where the user builds the workflow.
+		displayName:
+			'A page the site answers with an error, like a 404, still comes back as a normal item, not as a node error. Its HTTP status is in page_status_code. Check it, for example with an If node, before you use the content.',
+		name: 'pageStatusNotice',
+		type: 'notice',
+		default: '',
+		displayOptions: { show: { resource: ['scrape'], operation: ['scrape', 'getScrapeResult'] } },
+	},
 	{
 		displayName: 'Job ID',
 		name: 'jobId',
