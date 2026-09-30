@@ -4,7 +4,7 @@ all notable changes to `n8n-nodes-crawlbrulee` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
-## 0.2.0 (unreleased)
+## 0.2.0 (2026-09-30)
 
 the api now treats a page as data: a page the site really served comes back as a normal result, whatever its own HTTP status, and a new error covers a site we could not reach at all. this release follows it.
 
@@ -16,6 +16,7 @@ the api now treats a page as data: a page the site really served comes back as a
 
 ### changed
 
+- builds against `@crawlbrulee/sdk` 1.1.0 for its types. the node still ships no runtime dependencies.
 - the readme uses the new cost names. `credits` and `screenshot_slices` still come through with the same values, but they are deprecated and will be removed in a future version.
 
 ### compatibility
