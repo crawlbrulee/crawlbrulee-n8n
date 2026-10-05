@@ -14,7 +14,7 @@ export type CrawlbruleeContext =
 	| IHookFunctions
 	| ILoadOptionsFunctions;
 
-export const USER_AGENT = 'n8n-nodes-crawlbrulee/0.2.0';
+export const USER_AGENT = 'n8n-nodes-crawlbrulee/0.3.0';
 
 export interface CrawlbruleeRequestArgs {
 	method: 'GET' | 'POST';

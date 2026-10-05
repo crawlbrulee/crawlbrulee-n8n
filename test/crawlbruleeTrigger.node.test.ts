@@ -100,10 +100,9 @@ describe('CrawlbruleeTrigger', () => {
 			engine_credit_cost: 1,
 			proxy_multiplier: 1,
 			screenshot_slicing_credit_cost: 0,
+			zero_data_retention_credit_cost: 1,
 			engine: 'http',
 			proxy: 'basic',
-			credits: 1,
-			screenshot_slices: 0,
 		};
 		const raw = JSON.stringify({
 			event_id: 'evt_404',

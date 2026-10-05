@@ -1,5 +1,5 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { cacheMaxAgeOption, countryOption, proxyOption } from './shared';
+import { cacheMaxAgeOption, countryOption, proxyOption, zeroDataRetentionOption } from './shared';
 
 export const mapOperations: INodeProperties = {
 	displayName: 'Operation',
@@ -93,6 +93,7 @@ export const mapFields: INodeProperties[] = [
 				default: false,
 				description: 'Whether to read only sitemap.xml and skip homepage link extraction',
 			},
+			zeroDataRetentionOption,
 		],
 	},
 ];

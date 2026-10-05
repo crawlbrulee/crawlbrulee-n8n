@@ -47,6 +47,7 @@ export interface ScrapeParams {
 		cacheMaxAge?: string;
 		locale?: string;
 		country?: string;
+		zeroDataRetention?: boolean;
 	};
 	webhookUrl?: string;
 	webhookMetadata?: string | Record<string, unknown>;
@@ -128,6 +129,7 @@ export function buildScrapeBody(node: INode, itemIndex: number, p: ScrapeParams)
 
 	if (o.proxy) body.proxy = o.proxy;
 	if (o.requireJs === true) body.require_js = true;
+	if (o.zeroDataRetention === true) body.zero_data_retention = true;
 
 	const cleanup: ScrapeCleanup = {};
 	if (typeof o.removeAdsAndPopups === 'boolean') cleanup.ads_and_popups = o.removeAdsAndPopups;

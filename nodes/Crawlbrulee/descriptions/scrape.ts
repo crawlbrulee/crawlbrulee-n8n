@@ -1,5 +1,11 @@
 import type { INodeProperties } from 'n8n-workflow';
-import { cacheMaxAgeOption, countryOption, localeOption, proxyOption } from './shared';
+import {
+	cacheMaxAgeOption,
+	countryOption,
+	localeOption,
+	proxyOption,
+	zeroDataRetentionOption,
+} from './shared';
 
 const resourceShow = { resource: ['scrape'] };
 const urlShow = { resource: ['scrape'], operation: ['scrape', 'scrapeAsync'] };
@@ -258,6 +264,7 @@ export const scrapeFields: INodeProperties[] = [
 				description:
 					'Whether to render JavaScript in a headless browser first. Adds latency and credits.',
 			},
+			zeroDataRetentionOption,
 		],
 	},
 	{

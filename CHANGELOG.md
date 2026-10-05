@@ -4,6 +4,24 @@ all notable changes to `n8n-nodes-crawlbrulee` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 0.3.0 (2026-10-05)
+
+### added
+
+- **zero data retention.** a **Zero Data Retention** option under **Options** of **Scrape URL**, **Scrape URL (Async)** and **Map Website**, `zero_data_retention_credit_cost` in `response_meta.usage` (part of `total_credit_cost`), and a clear message for `zero_data_retention_not_enabled` (HTTP 403). it keeps the result out of the shared cache and must be enabled for your organization. see [zero data retention](https://crawlbrulee.com/docs/zero-data-retention).
+
+### changed
+
+- builds against `@crawlbrulee/sdk` 1.2.0 for its types. the node still ships no runtime dependencies.
+
+### removed
+
+- support for the deprecated usage fields `credits` and `screenshot_slices`. they were the old names of `total_credit_cost` and `screenshot_slicing_credit_cost`. the node never read them, and it still passes the response through untouched.
+
+### compatibility
+
+- nothing else is removed and no field is renamed. the option is off by default and the field is only sent when it is on.
+
 ## 0.2.0 (2026-09-30)
 
 the api now treats a page as data: a page the site really served comes back as a normal result, whatever its own HTTP status, and a new error covers a site we could not reach at all. this release follows it.

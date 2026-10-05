@@ -4,6 +4,8 @@ import { NodeApiError } from 'n8n-workflow';
 const KEY_REJECTED = 'crawlbrulee rejected the API key. Check the key on the credential.';
 const UNREACHABLE =
 	'crawlbrulee could not reach the target site. Check the URL. If it is right, the site may be down or slow, so try again later. This costs no credits.';
+const ZDR_NOT_ENABLED =
+	'Zero data retention is not enabled for your organization. Turn the Zero Data Retention option off, or contact sales@crawlbrulee.com to have it turned on. This costs no credits.';
 const SCRAPE_HINT =
 	'The Advanced proxy tier has a higher success rate; enable Require JS for JavaScript-rendered content.';
 
@@ -59,6 +61,8 @@ export function describeApiError(
 			return { message: body.message, description };
 		case 'target_unreachable':
 			return { message: UNREACHABLE, description };
+		case 'zero_data_retention_not_enabled':
+			return { message: ZDR_NOT_ENABLED, description };
 		case 'scrape_error':
 			return { message: `${body.message.replace(/[.\s]*$/, '')}. ${SCRAPE_HINT}`, description };
 		default:

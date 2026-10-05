@@ -31,6 +31,15 @@ export const cacheMaxAgeOption = (defaultText: string): INodeProperties => ({
 	description: `Seconds, or an ISO-8601 cutoff. Cached results older than this are skipped. Default ${defaultText}.`,
 });
 
+export const zeroDataRetentionOption: INodeProperties = {
+	displayName: 'Zero Data Retention',
+	name: 'zeroDataRetention',
+	type: 'boolean',
+	default: false,
+	description:
+		'Whether to keep the result out of the shared cache. Anything stored to deliver it is kept for 24 hours, then deleted. Adds 1 credit. Must be enabled for your organization.',
+};
+
 export const countryOption: INodeProperties = {
 	displayName: 'Country',
 	name: 'country',

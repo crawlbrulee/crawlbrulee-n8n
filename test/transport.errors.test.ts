@@ -17,6 +17,16 @@ describe('describeApiError', () => {
 		);
 	});
 
+	it('explains a zero data retention request the organization cannot make', () => {
+		const r = describeApiError(
+			403,
+			body('zero_data_retention_not_enabled', 'zero_data_retention is not enabled'),
+		);
+		expect(r.message).toBe(
+			'Zero data retention is not enabled for your organization. Turn the Zero Data Retention option off, or contact sales@crawlbrulee.com to have it turned on. This costs no credits.',
+		);
+	});
+
 	it('explains an anti-bot block without a retry hint', () => {
 		const r = describeApiError(403, body('antibot_blocked', 'Target refused'));
 		expect(r.message).toBe("The site's anti-bot protection blocked this scrape. Target refused");

@@ -15,6 +15,7 @@ export interface MapParams {
 		proxy?: ProxyChoice;
 		cacheMaxAge?: string;
 		country?: string;
+		zeroDataRetention?: boolean;
 	};
 }
 
@@ -25,6 +26,7 @@ export function buildMapBody(_node: INode, _itemIndex: number, p: MapParams): Ma
 	const o = p.options ?? {};
 
 	if (o.sitemapOnly === true) body.sitemap_only = true;
+	if (o.zeroDataRetention === true) body.zero_data_retention = true;
 
 	const types: MapTypes = {};
 	if (typeof o.internal === 'boolean') types.internal = o.internal;

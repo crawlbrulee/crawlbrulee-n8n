@@ -52,6 +52,15 @@ describe('buildMapBody', () => {
 		});
 	});
 
+	it('sends zero_data_retention at the top level only when on', () => {
+		expect(
+			buildMapBody(node, 0, { url: 'https://x', options: { zeroDataRetention: true } }),
+		).toEqual({ url: 'https://x', zero_data_retention: true });
+		expect(
+			buildMapBody(node, 0, { url: 'https://x', options: { zeroDataRetention: false } }),
+		).toEqual({ url: 'https://x' });
+	});
+
 	it('does not send sitemap_only: false', () => {
 		expect(buildMapBody(node, 0, { url: 'https://x', options: { sitemapOnly: false } })).toEqual({
 			url: 'https://x',

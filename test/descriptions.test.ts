@@ -39,6 +39,27 @@ describe('crawlbrulee node properties', () => {
 		expect(proxy.default).toBe('auto');
 	});
 
+	it('offers Zero data retention, off by default, on scrape, scrape async and map', () => {
+		const collections = find('options', (p) => p.displayOptions?.show?.resource !== undefined);
+		const owners = collections.filter((c) =>
+			(c.options as INodeProperties[]).some((o) => o.name === 'zeroDataRetention'),
+		);
+		expect(
+			owners
+				.map((c) => c.displayOptions?.show?.resource)
+				.flat()
+				.sort(),
+		).toEqual(['map', 'scrape']);
+		const flag = (owners[0].options as INodeProperties[]).find(
+			(o) => o.name === 'zeroDataRetention',
+		)!;
+		expect(flag.displayName).toBe('Zero Data Retention');
+		expect(flag.type).toBe('boolean');
+		expect(flag.default).toBe(false);
+		expect(flag.description).toMatch(/1 credit/);
+		expect(flag.description).toMatch(/kept for 24 hours, then deleted/);
+	});
+
 	it('shows webhook fields only for async scrape', () => {
 		expect(find('webhookUrl')[0].displayOptions?.show?.operation).toEqual(['scrapeAsync']);
 		expect(find('webhookMetadata')[0].displayOptions?.show?.operation).toEqual(['scrapeAsync']);

@@ -82,6 +82,19 @@ describe('buildScrapeBody', () => {
 		});
 	});
 
+	it('sends zero_data_retention at the top level only when on, for sync and async', () => {
+		expect(buildScrapeBody(node, 0, base({ options: { zeroDataRetention: true } }))).toMatchObject({
+			zero_data_retention: true,
+		});
+		expect(
+			buildAsyncScrapeBody(node, 0, base({ options: { zeroDataRetention: true } })),
+		).toMatchObject({ zero_data_retention: true });
+		expect(
+			buildScrapeBody(node, 0, base({ options: { zeroDataRetention: false } })),
+		).not.toHaveProperty('zero_data_retention');
+		expect(buildScrapeBody(node, 0, base())).not.toHaveProperty('zero_data_retention');
+	});
+
 	it('does not send require_js: false', () => {
 		expect(buildScrapeBody(node, 0, base({ options: { requireJs: false } }))).not.toHaveProperty(
 			'require_js',

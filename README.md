@@ -76,6 +76,10 @@ set the node's "On Error" setting to continue and a failed item comes back as `{
 
 a page the site really served is a normal item, whatever its status. a 404, 410 or 503 page comes back with its content, like any other page. it is not a node error, so "On Error" never sees it. when the status matters to your workflow, check it before you use the content — for example an **If** node on `{{ $json.page_status_code }}` is less than 400.
 
+### zero data retention
+
+turn on **Zero Data Retention** under **Options** of **Scrape URL**, **Scrape URL (Async)** or **Map Website** to keep the result out of the shared cache. anything stored to deliver it is kept for 24 hours, then deleted. it adds 1 credit and must be enabled for your organization. if it is not, the call fails with a clear message and costs no credits. see [zero data retention](https://crawlbrulee.com/docs/zero-data-retention).
+
 ### what a call cost
 
 scrape, map and finished-job responses carry `response_meta.usage`, so the cost of each call is in front of you:
@@ -86,11 +90,10 @@ scrape, map and finished-job responses carry `response_meta.usage`, so the cost 
 | `engine_credit_cost` | the engine's base price: 1 for `http`, 3 for `browser`, 5 for `screenshot`, 0 for `cache` |
 | `proxy_multiplier` | 1 for the Basic proxy tier, 5 for Advanced |
 | `screenshot_slicing_credit_cost` | 1 when the screenshot was cut into slices on this call, else 0 (reusing slices from the cache costs 0). not on **Map Website** |
+| `zero_data_retention_credit_cost` | 1 when **Zero Data Retention** added its credit to this call, else 0 |
 | `engine`, `proxy` | the engine and the proxy tier that did the work |
 
-`total_credit_cost` is always `engine_credit_cost × proxy_multiplier + screenshot_slicing_credit_cost`. a page we don't bill, such as one the site answered with a 5xx status, has 0 in every `*_credit_cost` field. the [credits and pricing](https://crawlbrulee.com/docs/credits-and-pricing) page lists what is billed.
-
-`credits` and `screenshot_slices` are still there, with the same values as `total_credit_cost` and `screenshot_slicing_credit_cost`. they are deprecated and will be removed in a future version, so read the new names in new workflows.
+`total_credit_cost` is always `engine_credit_cost × proxy_multiplier + screenshot_slicing_credit_cost + zero_data_retention_credit_cost` (map has no slicing part). a page we don't bill, such as one the site answered with a 5xx status, has 0 in every `*_credit_cost` field. the [credits and pricing](https://crawlbrulee.com/docs/credits-and-pricing) page lists what is billed.
 
 ## the crawlbrulee Trigger
 
@@ -106,7 +109,7 @@ with the secret set, the trigger checks the HMAC-SHA256 signature on every deliv
 
 ## errors
 
-the node turns api errors into messages you can act on: a rate limit says how long to wait, out of credits and concurrency limit are each named, an anti-bot block says so with no retry hint, a scrape error points you at the Advanced proxy tier and at Require JS, and a site we could not reach at all (for example it timed out, or its certificate is bad) tells you to check the url and try again later. the raw response stays on the error for the n8n error view, and every error name is in the [error reference](https://crawlbrulee.com/docs/errors).
+the node turns api errors into messages you can act on: a rate limit says how long to wait, a Zero Data Retention request your organization cannot make yet says to turn the option off or ask us to enable it, out of credits and concurrency limit are each named, an anti-bot block says so with no retry hint, a scrape error points you at the Advanced proxy tier and at Require JS, and a site we could not reach at all (for example it timed out, or its certificate is bad) tells you to check the url and try again later. the raw response stays on the error for the n8n error view, and every error name is in the [error reference](https://crawlbrulee.com/docs/errors).
 
 ## development
 

@@ -46,10 +46,9 @@ const usage404 = {
 	engine_credit_cost: 3,
 	proxy_multiplier: 5,
 	screenshot_slicing_credit_cost: 0,
+	zero_data_retention_credit_cost: 0,
 	engine: 'browser',
 	proxy: 'advanced',
-	credits: 15,
-	screenshot_slices: 0,
 };
 
 describe('Crawlbrulee node', () => {
@@ -76,7 +75,7 @@ describe('Crawlbrulee node', () => {
 				body: {
 					url: 'https://example.com',
 					markdown: '# hi',
-					response_meta: { usage: { credits: 1 } },
+					response_meta: { usage: { total_credit_cost: 1 } },
 				},
 			},
 		);
@@ -168,9 +167,9 @@ describe('Crawlbrulee node', () => {
 					total_credit_cost: 1,
 					engine_credit_cost: 1,
 					proxy_multiplier: 1,
+					zero_data_retention_credit_cost: 1,
 					engine: 'http',
 					proxy: 'basic',
-					credits: 1,
 				},
 			},
 		};
@@ -187,7 +186,7 @@ describe('Crawlbrulee node', () => {
 			url: 'https://x',
 			markdown: '# hi',
 			response_meta: {
-				usage: { credits: 1, engine: 'http', proxy: 'basic', screenshot_slices: 0 },
+				usage: { engine: 'http', proxy: 'basic' },
 			},
 		};
 		const { self } = ctx(
