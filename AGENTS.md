@@ -37,3 +37,20 @@ only: submit the package in the n8n Creator Portal (https://creators.n8n.io/node
 **Where things are written down:** `README.md` is for n8n users only, with no maintainer
 steps in it. Everything else is the code and its tests — treat them as the contract, and
 the public api docs at <https://crawlbrulee.com/docs> as the source of truth above both.
+
+## releasing
+
+a release is a `vX.Y.Z` tag pushed on a commit that is already on `main`. the publish
+workflow refuses a tag whose commit is not on `origin/main` or whose version doesn't match
+`package.json`, runs the checks, publishes with trusted publishing (no tokens anywhere) and
+creates the GitHub release.
+
+- bump the version in every place it lives: `package.json` and `USER_AGENT` in `nodes/Crawlbrulee/transport/request.ts`.
+- add a dated `CHANGELOG.md` entry. a version that is already published is final: later
+  changes get a new version, never an edit to the old entry. check the registry, not local
+  tags, to see what is out.
+- `@crawlbrulee/sdk` is a type-only dev dependency, but CI still installs with
+  `--frozen-lockfile`: after a new sdk is on npm, raise the range and run `pnpm install` before
+  you tag. the node must keep shipping no runtime dependencies.
+- after the npm publish, run `npx @n8n/scan-community-package n8n-nodes-crawlbrulee@<version>`.
+  a verified node must pass it to keep its badge.
