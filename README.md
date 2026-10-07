@@ -47,7 +47,7 @@ pick a resource, then an operation:
 | Scrape | Scrape URL | fetch one url, get back the content you asked for |
 | Scrape | Scrape URL (Async) | start a background job, get back its job id |
 | Scrape | Get Scrape Status | pending, running, done or failed |
-| Scrape | Get Scrape Result | the content of a finished job |
+| Scrape | Get Scrape Result | the content of a finished job, for 24 hours after it was submitted |
 | Map | Map Website | a site's urls, from its sitemap and its homepage links |
 | Account | Get Credit Usage | credits used and left this billing cycle, plus your concurrency limit |
 | Account | Get Account Info | the organization and token behind the api key |
@@ -62,7 +62,7 @@ every field has a hint in n8n. three things the hints don't tell you:
 
 ### screenshots as files
 
-turn on **Download Screenshot** — it's on **Scrape URL** and on **Get Scrape Result** — and the node attaches the image as binary data under `screenshot`, plus one key per tile (`screenshot_slice_0`, `screenshot_slice_1`, …) when you set Slice Height. the urls stay in the json too. a download can fail, since a signed url can expire; the item still comes through with its page content and the reason lands on the json as `screenshot_download_error`.
+turn on **Download Screenshot** — it's on **Scrape URL** and on **Get Scrape Result** — and the node attaches the image as binary data under `screenshot`, plus one key per tile (`screenshot_slice_0`, `screenshot_slice_1`, …) when you set Slice Height. the urls stay in the json too, but they are signed links that expire 24 hours after the scrape (for **Scrape URL (Async)**, 24 hours after the job was submitted), so turn this on when you need the image later in the workflow. a download can fail, since a signed url can expire; the item still comes through with its page content and the reason lands on the json as `screenshot_download_error`.
 
 ### what comes back
 

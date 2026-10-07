@@ -4,6 +4,13 @@ all notable changes to `n8n-nodes-crawlbrulee` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 0.3.1 (2026-10-07)
+
+### changed
+
+- **Get Scrape Result**, **Get Scrape Status** and **Download Screenshot** say that an async job answers for 24 hours after it was submitted and that screenshot links are signed and expire 24 hours after the scrape. the readme says so too.
+- builds against `@crawlbrulee/sdk` 1.2.1 for its types. the node still ships no runtime dependencies.
+
 ## 0.3.0 (2026-10-05)
 
 ### added

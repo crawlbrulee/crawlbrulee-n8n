@@ -24,13 +24,14 @@ export const scrapeOperations: INodeProperties = {
 			value: 'getScrapeResult',
 			action: 'Get scrape result',
 			description:
-				"Fetch the content of a finished async scrape. The site's own HTTP status is in page_status_code.",
+				"Fetch the content of a finished async scrape, up to 24 hours after it was submitted. The site's own HTTP status is in page_status_code.",
 		},
 		{
 			name: 'Get Scrape Status',
 			value: 'getScrapeStatus',
 			action: 'Get scrape status',
-			description: 'Check whether an async scrape is pending, running, done or failed',
+			description:
+				'Check whether an async scrape is pending, running, done or failed. Available for 24 hours after it was submitted.',
 		},
 		{
 			name: 'Scrape URL',
@@ -215,7 +216,8 @@ export const scrapeFields: INodeProperties[] = [
 		name: 'downloadScreenshot',
 		type: 'boolean',
 		default: false,
-		description: 'Whether to download the screenshot (and its slices) into binary data on the item',
+		description:
+			'Whether to download the screenshot (and its slices) into binary data on the item. Screenshot links are signed and expire 24 hours after the scrape.',
 		// Only the sync scrape returns an image; an async submit returns a job id, so Get Scrape
 		// Result carries its own Download Screenshot field further down.
 		displayOptions: {
@@ -291,7 +293,7 @@ export const scrapeFields: INodeProperties[] = [
 		type: 'boolean',
 		default: false,
 		description:
-			'Whether to download the screenshot (and its slices) into binary data when the result has one',
+			'Whether to download the screenshot (and its slices) into binary data when the result has one. Screenshot links expire 24 hours after the job was submitted.',
 		displayOptions: { show: { resource: ['scrape'], operation: ['getScrapeResult'] } },
 	},
 ];
