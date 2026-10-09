@@ -8,7 +8,7 @@
 put crawlbrulee in your n8n workflows. this community node package turns any url into clean markdown, html, links, images, metadata or a screenshot, maps a site's urls, and starts a workflow when a background scrape finishes. it also works as an [AI Agent](https://docs.n8n.io/advanced-ai/) tool, so an agent in n8n can scrape a page on its own.
 
 - **everything runs in the EU.** the fetch, the render, the cache and your result never leave EU servers. the proxy exit is the one hop you choose: pick an EU exit and nothing leaves at all. gdpr-aligned, with a data processing agreement.
-- **output made for models.** markdown with the page chrome stripped and the links kept, ready for the prompt. full-page screenshots can come back as tiles sized for an image model.
+- **output made for models.** markdown with ads, popups and cookie banners removed and the links kept, ready for the prompt. full-page screenshots can come back as tiles sized for an image model.
 - **the hard parts, handled.** headless Chrome when a page needs it, rotating proxies with country selection, automatic retries, ad and cookie-banner removal, caching, background jobs and signed webhooks.
 - **start free.** 750 credits, no credit card.
 
