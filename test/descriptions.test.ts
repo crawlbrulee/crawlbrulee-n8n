@@ -60,6 +60,35 @@ describe('crawlbrulee node properties', () => {
 		expect(flag.description).toMatch(/kept for 24 hours, then deleted/);
 	});
 
+	it('offers the Elements list and Elements (JSON) on scrape and scrape async', () => {
+		const list = find('elements')[0];
+		expect(list.type).toBe('fixedCollection');
+		expect(list.typeOptions?.multipleValues).toBe(true);
+		expect(list.displayOptions?.show?.operation).toEqual(['scrape', 'scrapeAsync']);
+		expect(list.description).toContain('https://crawlbrulee.com/docs/scrape/elements');
+		const values = (list.options as Array<{ values: INodeProperties[] }>)[0].values;
+		expect(values.map((v) => v.name).sort()).toEqual([
+			'all',
+			'attribute',
+			'name',
+			'output',
+			'selector',
+		]);
+		const attribute = values.find((v) => v.name === 'attribute')!;
+		expect(attribute.displayOptions?.show?.output).toEqual(['attribute']);
+		expect(values.find((v) => v.name === 'output')!.default).toBe('text');
+		expect(values.find((v) => v.name === 'all')!.default).toBe(false);
+
+		const options = find(
+			'options',
+			(p) => p.displayOptions?.show?.operation?.includes('scrape') === true,
+		)[0];
+		const json = (options.options as INodeProperties[]).find((o) => o.name === 'elementsJson')!;
+		expect(json.displayName).toBe('Elements (JSON)');
+		expect(json.type).toBe('json');
+		expect(json.description).toContain('https://crawlbrulee.com/docs/scrape/elements');
+	});
+
 	it('shows webhook fields only for async scrape', () => {
 		expect(find('webhookUrl')[0].displayOptions?.show?.operation).toEqual(['scrapeAsync']);
 		expect(find('webhookMetadata')[0].displayOptions?.show?.operation).toEqual(['scrapeAsync']);

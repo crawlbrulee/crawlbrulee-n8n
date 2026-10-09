@@ -22,6 +22,33 @@ export const EXTRACT_KEYS: ExtractKey[] = [
 
 export type ProxyChoice = 'auto' | 'basic' | 'advanced';
 
+export type ElementOutput = 'text' | 'html' | 'attribute';
+
+/** One row of the Elements list in the UI. */
+export interface ElementRow {
+	name?: string;
+	selector?: string;
+	output?: ElementOutput;
+	attribute?: string;
+	all?: boolean;
+}
+
+/**
+ * One value of `extract.elements`: a selector string (the text of the first match) or an
+ * object. Local until `@crawlbrulee/sdk` ships the type; the api docs are the full contract.
+ */
+export type ElementSpec =
+	| string
+	| {
+			selector: string;
+			output?: ElementOutput;
+			attribute?: string;
+			all?: boolean;
+			fields?: Record<string, ElementSpec>;
+	  };
+
+type ExtractWithElements = ScrapeExtract & { elements?: Record<string, ElementSpec> };
+
 export interface ScreenshotAction {
 	type: 'wait' | 'scroll';
 	value: number;
@@ -30,6 +57,7 @@ export interface ScreenshotAction {
 export interface ScrapeParams {
 	url: string;
 	extract: ExtractKey[];
+	elements?: { element?: ElementRow[] };
 	screenshotType: 'none' | 'viewport' | 'full_page';
 	screenshotOptions: {
 		width?: number;
@@ -48,6 +76,7 @@ export interface ScrapeParams {
 		locale?: string;
 		country?: string;
 		zeroDataRetention?: boolean;
+		elementsJson?: string | Record<string, unknown>;
 	};
 	webhookUrl?: string;
 	webhookMetadata?: string | Record<string, unknown>;
@@ -111,16 +140,126 @@ function buildScreenshot(
 	return shot;
 }
 
-export function buildScrapeBody(node: INode, itemIndex: number, p: ScrapeParams): ScrapeRequest {
-	const chosen = new Set(p.extract ?? []);
-	if (chosen.size === 0 && p.screenshotType === 'none') {
-		throw new NodeOperationError(node, 'Pick at least one Extract output or a Screenshot', {
+/**
+ * Parses JSON typed as text. Bad JSON gets its own error, with the parser's reason when it is
+ * short and does not quote the input back.
+ */
+function parseJsonText(node: INode, itemIndex: number, text: string, field: string): unknown {
+	try {
+		return JSON.parse(text);
+	} catch (error) {
+		const reason = error instanceof Error ? error.message : '';
+		const safe = reason !== '' && reason.length <= 120 && !reason.includes('"');
+		throw new NodeOperationError(node, `${field} is not valid JSON`, {
 			itemIndex,
-			description: 'The request would ask for nothing.',
+			description: safe ? `${reason}.` : 'Check for a missing quote, comma or bracket.',
 		});
 	}
-	const extract: ScrapeExtract = {};
+}
+
+function parseElementsJson(
+	node: INode,
+	itemIndex: number,
+	raw: string | Record<string, unknown> | undefined,
+): Record<string, unknown> {
+	if (raw === undefined || raw === null) return {};
+	if (typeof raw === 'string' && raw.trim() === '') return {};
+	const parsed: unknown =
+		typeof raw === 'string' ? parseJsonText(node, itemIndex, raw, 'Elements (JSON)') : raw;
+	if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) {
+		throw new NodeOperationError(node, 'Elements (JSON) must be a JSON object', {
+			itemIndex,
+			description: 'Each key is a name, each value a CSS selector or an object.',
+		});
+	}
+	for (const [name, value] of Object.entries(parsed)) {
+		const ok = typeof value === 'string' || (typeof value === 'object' && value !== null);
+		if (!ok || Array.isArray(value)) {
+			throw new NodeOperationError(
+				node,
+				`Element "${name}" in Elements (JSON) must be a CSS selector or an object`,
+				{ itemIndex },
+			);
+		}
+	}
+	return parsed as Record<string, unknown>;
+}
+
+function elementFromRow(
+	node: INode,
+	itemIndex: number,
+	row: ElementRow,
+	name: string,
+): ElementSpec {
+	const selector = String(row.selector ?? '').trim();
+	if (selector === '') {
+		throw new NodeOperationError(node, `Element "${name}" needs a CSS Selector`, { itemIndex });
+	}
+	const output = row.output ?? 'text';
+	const all = row.all === true;
+	if (output === 'text' && !all) return selector;
+	const spec: Exclude<ElementSpec, string> = { selector };
+	if (output !== 'text') spec.output = output;
+	if (output === 'attribute') {
+		const attribute = String(row.attribute ?? '').trim();
+		if (attribute === '') {
+			throw new NodeOperationError(node, `Element "${name}" needs an Attribute`, {
+				itemIndex,
+				description: 'Set the attribute to read, for example href.',
+			});
+		}
+		spec.attribute = attribute;
+	}
+	if (all) spec.all = true;
+	return spec;
+}
+
+/** The Elements list and Elements (JSON), merged into `extract.elements`. Undefined when both are empty. */
+export function buildElements(
+	node: INode,
+	itemIndex: number,
+	p: ScrapeParams,
+): Record<string, ElementSpec> | undefined {
+	const elements: Record<string, ElementSpec> = {};
+	const twice = (name: string) =>
+		new NodeOperationError(node, `Element name "${name}" is used twice`, {
+			itemIndex,
+			description: 'Each name in Elements and Elements (JSON) must be different.',
+		});
+	for (const row of p.elements?.element ?? []) {
+		const name = String(row.name ?? '').trim();
+		// a fully blank row is skipped, like a blank Exclude Selector
+		if (name === '' && String(row.selector ?? '').trim() === '') continue;
+		if (name === '') {
+			throw new NodeOperationError(node, 'Each Element needs a Name', { itemIndex });
+		}
+		if (Object.prototype.hasOwnProperty.call(elements, name)) throw twice(name);
+		elements[name] = elementFromRow(node, itemIndex, row, name);
+	}
+	const fromJson = parseElementsJson(node, itemIndex, p.options?.elementsJson);
+	for (const [name, value] of Object.entries(fromJson)) {
+		if (Object.prototype.hasOwnProperty.call(elements, name)) throw twice(name);
+		elements[name] = value as ElementSpec;
+	}
+	return Object.keys(elements).length > 0 ? elements : undefined;
+}
+
+export function buildScrapeBody(node: INode, itemIndex: number, p: ScrapeParams): ScrapeRequest {
+	const chosen = new Set(p.extract ?? []);
+	const elements = buildElements(node, itemIndex, p);
+	if (chosen.size === 0 && !elements && p.screenshotType === 'none') {
+		throw new NodeOperationError(
+			node,
+			'Pick at least one Extract output, an Element or a Screenshot',
+			{
+				itemIndex,
+				description: 'The request would ask for nothing.',
+			},
+		);
+	}
+	const extract: ExtractWithElements = {};
 	for (const key of EXTRACT_KEYS) extract[key] = chosen.has(key);
+	if (elements) extract.elements = elements;
 	const screenshot = buildScreenshot(node, itemIndex, p);
 	if (screenshot) extract.screenshot = screenshot;
 
@@ -157,15 +296,8 @@ function parseMetadata(
 ): Record<string, unknown> | undefined {
 	if (raw === undefined || raw === null || raw === '') return undefined;
 	if (typeof raw === 'object') return raw;
-	let parsed: unknown;
-	let ok = true;
-	try {
-		parsed = JSON.parse(raw);
-		if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed)) ok = false;
-	} catch {
-		ok = false;
-	}
-	if (!ok)
+	const parsed = parseJsonText(node, itemIndex, raw, 'Webhook Metadata');
+	if (typeof parsed !== 'object' || parsed === null || Array.isArray(parsed))
 		throw new NodeOperationError(node, 'Webhook Metadata must be a JSON object', { itemIndex });
 	return parsed as Record<string, unknown>;
 }

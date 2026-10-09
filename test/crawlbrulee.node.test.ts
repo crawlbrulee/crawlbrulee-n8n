@@ -159,6 +159,44 @@ describe('Crawlbrulee node', () => {
 		}
 	});
 
+	it('sends extract.elements and returns elements as the api gives them', async () => {
+		const elements = {
+			heading: 'All products',
+			books: [{ title: 'A Light in the Attic', price: '£51.77', url: null }],
+			next_page: 'https://books.toscrape.com/catalogue/page-2.html',
+		};
+		const body = { url: 'https://books.toscrape.com/', elements, warnings: ['elements_truncated'] };
+		const { self, httpRequestWithAuthentication } = ctx(
+			{
+				resource: 'scrape',
+				operation: 'scrape',
+				url: 'https://books.toscrape.com/',
+				extract: [],
+				elements: {
+					element: [
+						{ name: 'heading', selector: 'h1', output: 'text', all: false },
+						{ name: 'next_page', selector: 'li.next a', output: 'attribute', attribute: 'href' },
+					],
+				},
+				screenshotType: 'none',
+				screenshotOptions: {},
+				options: {
+					elementsJson:
+						'{"books": {"selector": "article.product_pod", "all": true, "fields": {"price": ".price_color"}}}',
+				},
+			},
+			{ statusCode: 200, body },
+		);
+		const [out] = await node.execute.call(self);
+		expect(out[0].json).toEqual(body);
+		const sent = httpRequestWithAuthentication.mock.calls[0][1].body.extract.elements;
+		expect(sent).toEqual({
+			heading: 'h1',
+			next_page: { selector: 'li.next a', output: 'attribute', attribute: 'href' },
+			books: { selector: 'article.product_pod', all: true, fields: { price: '.price_color' } },
+		});
+	});
+
 	it('passes the map usage fields through', async () => {
 		const body = {
 			links: [],

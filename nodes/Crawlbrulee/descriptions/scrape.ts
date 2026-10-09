@@ -7,6 +7,9 @@ import {
 	zeroDataRetentionOption,
 } from './shared';
 
+const ELEMENTS_DOCS =
+	'Selector rules and limits: <a href="https://crawlbrulee.com/docs/scrape/elements">elements docs</a>';
+
 const resourceShow = { resource: ['scrape'] };
 const urlShow = { resource: ['scrape'], operation: ['scrape', 'scrapeAsync'] };
 const screenshotShow = { ...urlShow, screenshotType: ['full_page', 'viewport'] };
@@ -101,6 +104,73 @@ export const scrapeFields: INodeProperties[] = [
 		default: ['cleaned_html', 'metadata'],
 		description: 'Which outputs to return',
 		displayOptions: { show: urlShow },
+	},
+	{
+		displayName: 'Elements',
+		name: 'elements',
+		type: 'fixedCollection',
+		typeOptions: { multipleValues: true },
+		placeholder: 'Add Element',
+		default: {},
+		description: `Values to read from the page by CSS selector. They come back in elements, under the names you give. No extra credits. ${ELEMENTS_DOCS}.`,
+		displayOptions: { show: urlShow },
+		options: [
+			{
+				name: 'element',
+				displayName: 'Element',
+				values: [
+					{
+						displayName: 'All Matches',
+						name: 'all',
+						type: 'boolean',
+						default: false,
+						description:
+							'Whether to return every match as a list. Off returns the first match, or null when nothing matches.',
+					},
+					{
+						displayName: 'Attribute',
+						name: 'attribute',
+						type: 'string',
+						default: '',
+						placeholder: 'e.g. href',
+						description: 'The attribute to read',
+						displayOptions: { show: { output: ['attribute'] } },
+					},
+					{
+						displayName: 'CSS Selector',
+						name: 'selector',
+						type: 'string',
+						default: '',
+						placeholder: 'e.g. .price',
+						description: 'Which element on the page to read',
+					},
+					{
+						displayName: 'Name',
+						name: 'name',
+						type: 'string',
+						default: '',
+						placeholder: 'e.g. price',
+						description: 'The key this value gets in elements',
+					},
+					{
+						displayName: 'Output',
+						name: 'output',
+						type: 'options',
+						options: [
+							{
+								name: 'Attribute',
+								value: 'attribute',
+								description: 'One attribute, like href. href and src come back as full URLs.',
+							},
+							{ name: 'HTML', value: 'html', description: 'The HTML of the element itself' },
+							{ name: 'Text', value: 'text', description: 'The text inside the element' },
+						],
+						default: 'text',
+						description: 'What to read from each match',
+					},
+				],
+			},
+		],
 	},
 	{
 		displayName: 'Screenshot',
@@ -239,6 +309,15 @@ export const scrapeFields: INodeProperties[] = [
 			cacheMaxAgeOption('2 days'),
 			countryOption,
 			{
+				displayName: 'Elements (JSON)',
+				name: 'elementsJson',
+				type: 'json',
+				default: '',
+				placeholder:
+					'e.g. {"books": {"selector": "article.product_pod", "all": true, "fields": {"title": {"selector": "h3 a", "output": "attribute", "attribute": "title"}, "price": ".price_color"}}}',
+				description: `Elements as a JSON object, merged with the Elements list. Use it for fields, which read values inside each match, like a title and price per product card. ${ELEMENTS_DOCS}.`,
+			},
+			{
 				displayName: 'Exclude Selectors',
 				name: 'excludeSelectors',
 				type: 'string',
@@ -246,7 +325,7 @@ export const scrapeFields: INodeProperties[] = [
 				default: [],
 				placeholder: 'e.g. .cookie-banner',
 				description:
-					'CSS selectors removed before anything is extracted. Sending any skips the cache.',
+					'CSS selectors removed before anything is extracted, Elements included, except Raw HTML. Requests with different selectors do not share cached results.',
 			},
 			localeOption,
 			proxyOption,

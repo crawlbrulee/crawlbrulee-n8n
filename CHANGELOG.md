@@ -4,6 +4,16 @@ all notable changes to `n8n-nodes-crawlbrulee` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
 
+## 0.4.0 (2026-10-09)
+
+### added
+
+- **Elements** on **Scrape URL** and **Scrape URL (Async)**: read named values from the page by CSS selector, as text, HTML or an attribute, the first match or all of them. they come back in `elements`, under the names you give, on the result and on **Get Scrape Result**. no extra credits. for a value per match, like a title and price per product card, use **Elements (JSON)** under **Options**. see [elements](https://crawlbrulee.com/docs/scrape/elements).
+
+### changed
+
+- the **Exclude Selectors** hint no longer says that sending selectors skips the cache. requests with the same selectors now share cached results.
+
 ## 0.3.1 (2026-10-07)
 
 ### changed

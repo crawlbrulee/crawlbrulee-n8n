@@ -60,6 +60,41 @@ every field has a hint in n8n. three things the hints don't tell you:
 - a **Screenshot** renders the page in a real browser and is billed at the screenshot rate, the priciest one — leave it on None when you don't need the image.
 - **Scrape URL (Async)** takes the same fields as **Scrape URL**, minus **Download Screenshot** (a submit gives you a job id, not an image), plus **Webhook URL** and **Webhook Metadata**.
 
+### elements
+
+**Elements** reads named values from the page by CSS selector. add one row per value: a **Name**, a **CSS Selector**, the **Output** (Text, HTML or an Attribute such as `href`), and **All Matches** to get every match as a list. they come back in `elements`, under the names you gave. elements cost no extra credits. **Extract** starts on Cleaned HTML and Metadata, so clear it to get only the elements.
+
+for a value per match, like a title, price and link per product card, put the request in **Elements (JSON)** under **Options**. it is merged with the list, and each name may be used once:
+
+```json
+{
+  "books": {
+    "selector": "article.product_pod",
+    "all": true,
+    "fields": {
+      "title": { "selector": "h3 a", "output": "attribute", "attribute": "title" },
+      "price": ".price_color"
+    }
+  }
+}
+```
+
+with a **heading** row (`h1`, Text), the item's json gets this (the page has 20 books; two are shown here):
+
+```json
+{
+  "elements": {
+    "heading": "All products",
+    "books": [
+      { "title": "A Light in the Attic", "price": "£51.77" },
+      { "title": "Tipping the Velvet", "price": "£53.74" }
+    ]
+  }
+}
+```
+
+a name with no match is `null` (`[]` with All Matches). selector rules and limits: see [elements](https://crawlbrulee.com/docs/scrape/elements).
+
 ### screenshots as files
 
 turn on **Download Screenshot** — it's on **Scrape URL** and on **Get Scrape Result** — and the node attaches the image as binary data under `screenshot`, plus one key per tile (`screenshot_slice_0`, `screenshot_slice_1`, …) when you set Slice Height. the urls stay in the json too, but they are signed links that expire 24 hours after the scrape (for **Scrape URL (Async)**, 24 hours after the job was submitted), so turn this on when you need the image later in the workflow. a download can fail, since a signed url can expire; the item still comes through with its page content and the reason lands on the json as `screenshot_download_error`.

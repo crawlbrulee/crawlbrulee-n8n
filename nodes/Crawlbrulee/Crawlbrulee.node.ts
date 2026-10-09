@@ -64,6 +64,7 @@ function scrapeParams(this: IExecuteFunctions, i: number): ScrapeParams {
 	return {
 		url: this.getNodeParameter('url', i) as string,
 		extract: this.getNodeParameter('extract', i, []) as ScrapeParams['extract'],
+		elements: this.getNodeParameter('elements', i, {}) as ScrapeParams['elements'],
 		screenshotType: this.getNodeParameter(
 			'screenshotType',
 			i,

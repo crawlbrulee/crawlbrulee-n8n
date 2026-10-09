@@ -159,8 +159,15 @@ describe('buildScrapeBody', () => {
 
 	it('rejects a request that asks for nothing', () => {
 		expect(() => buildScrapeBody(node, 2, base({ extract: [], screenshotType: 'none' }))).toThrow(
-			/Pick at least one Extract output or a Screenshot/,
+			/Pick at least one Extract output, an Element or a Screenshot/,
 		);
+		expect(() =>
+			buildScrapeBody(
+				node,
+				2,
+				base({ extract: [], elements: { element: [{ name: 'heading', selector: 'h1' }] } }),
+			),
+		).not.toThrow();
 		expect(() =>
 			buildScrapeBody(node, 2, base({ extract: [], screenshotType: 'viewport' })),
 		).not.toThrow();
@@ -188,6 +195,159 @@ describe('buildScrapeBody', () => {
 	});
 });
 
+describe('extract.elements', () => {
+	const books = {
+		selector: 'article.product_pod',
+		all: true,
+		fields: {
+			title: { selector: 'h3 a', output: 'attribute', attribute: 'title' },
+			price: '.price_color',
+		},
+	};
+
+	it('turns the list into elements, using the short form for the text of the first match', () => {
+		const body = buildScrapeBody(
+			node,
+			0,
+			base({
+				elements: {
+					element: [
+						{ name: 'heading', selector: ' h1 ', output: 'text', all: false },
+						{ name: 'next_page', selector: 'li.next a', output: 'attribute', attribute: 'href' },
+						{ name: 'prices', selector: '.price_color', output: 'text', all: true },
+						{ name: 'card', selector: 'article', output: 'html', attribute: 'ignored' },
+					],
+				},
+			}),
+		);
+		expect(body.extract).toMatchObject({
+			elements: {
+				heading: 'h1',
+				next_page: { selector: 'li.next a', output: 'attribute', attribute: 'href' },
+				prices: { selector: '.price_color', all: true },
+				card: { selector: 'article', output: 'html' },
+			},
+		});
+	});
+
+	it('merges the list with Elements (JSON), given as text or as an object', () => {
+		const list = { element: [{ name: 'heading', selector: 'h1' }] };
+		const expected = { heading: 'h1', books };
+		expect(
+			buildScrapeBody(
+				node,
+				0,
+				base({ elements: list, options: { elementsJson: JSON.stringify({ books }) } }),
+			).extract,
+		).toMatchObject({ elements: expected });
+		expect(
+			buildAsyncScrapeBody(node, 0, base({ elements: list, options: { elementsJson: { books } } }))
+				.extract,
+		).toMatchObject({ elements: expected });
+	});
+
+	it('rejects a name given twice, in the list or across the list and the JSON', () => {
+		const row = { name: 'price', selector: '.price' };
+		expect(() =>
+			buildScrapeBody(node, 0, base({ elements: { element: [row, { ...row, selector: 'b' }] } })),
+		).toThrow(/Element name "price" is used twice/);
+		expect(() =>
+			buildScrapeBody(
+				node,
+				0,
+				base({ elements: { element: [row] }, options: { elementsJson: '{"price": "b"}' } }),
+			),
+		).toThrow(NodeOperationError);
+	});
+
+	it('sends nothing when the list and the JSON are empty', () => {
+		for (const over of [
+			{},
+			{ elements: {} },
+			{ elements: { element: [] } },
+			{ options: { elementsJson: '' } },
+			{ options: { elementsJson: '  ' } },
+			{ options: { elementsJson: '{}' } },
+		] as Partial<ScrapeParams>[]) {
+			expect(buildScrapeBody(node, 0, base(over)).extract).not.toHaveProperty('elements');
+		}
+	});
+
+	it('rejects a row without a name, selector or attribute', () => {
+		expect(() =>
+			buildScrapeBody(node, 0, base({ elements: { element: [{ name: ' ', selector: 'h1' }] } })),
+		).toThrow(/needs a Name/);
+		expect(() =>
+			buildScrapeBody(node, 0, base({ elements: { element: [{ name: 'a', selector: '' }] } })),
+		).toThrow(/"a" needs a CSS Selector/);
+		expect(() =>
+			buildScrapeBody(
+				node,
+				0,
+				base({ elements: { element: [{ name: 'a', selector: 'a', output: 'attribute' }] } }),
+			),
+		).toThrow(/"a" needs an Attribute/);
+	});
+
+	it('skips a fully blank row but still rejects a half-filled one', () => {
+		const blank = [
+			{ name: '', selector: '' },
+			{ name: ' ', selector: '  ', output: 'attribute' as const },
+			{},
+		];
+		expect(
+			buildScrapeBody(node, 0, base({ elements: { element: blank } })).extract,
+		).not.toHaveProperty('elements');
+		expect(
+			buildScrapeBody(
+				node,
+				0,
+				base({ elements: { element: [...blank, { name: 'heading', selector: 'h1' }] } }),
+			).extract,
+		).toMatchObject({ elements: { heading: 'h1' } });
+		expect(() =>
+			buildScrapeBody(
+				node,
+				0,
+				base({ extract: [], elements: { element: [{ name: '', selector: '' }] } }),
+			),
+		).toThrow(/ask for nothing|Pick at least one/);
+		expect(() =>
+			buildScrapeBody(node, 0, base({ elements: { element: [{ name: '', selector: 'h1' }] } })),
+		).toThrow(/needs a Name/);
+		expect(() =>
+			buildScrapeBody(node, 0, base({ elements: { element: [{ name: 'a', selector: ' ' }] } })),
+		).toThrow(/"a" needs a CSS Selector/);
+	});
+
+	it('rejects Elements (JSON) that is not an object of selectors', () => {
+		for (const bad of ['[]', '"h1"', 'null', '{"a": 1}', '{"a": ["h1"]}']) {
+			expect(() => buildScrapeBody(node, 0, base({ options: { elementsJson: bad } }))).toThrow(
+				/Elements \(JSON\) must be|in Elements \(JSON\) must be/,
+			);
+		}
+	});
+
+	it('says when Elements (JSON) is not valid JSON, with a short reason', () => {
+		const error = (text: string) => {
+			try {
+				buildScrapeBody(node, 0, base({ options: { elementsJson: text } }));
+			} catch (e) {
+				return e as NodeOperationError;
+			}
+			throw new Error('expected an error');
+		};
+		const oops = error('{oops');
+		expect(oops.message).toBe('Elements (JSON) is not valid JSON');
+		expect(oops.description).toMatch(/position 1/);
+		// a reason that quotes the input back is replaced by a plain hint
+		const quoted = error('{"a": tru}');
+		expect(quoted.message).toBe('Elements (JSON) is not valid JSON');
+		expect(quoted.description).toBe('Check for a missing quote, comma or bracket.');
+		expect(quoted.description).not.toContain('tru');
+	});
+});
+
 describe('buildAsyncScrapeBody', () => {
 	it('adds the webhook when a url is set, parsing json metadata', () => {
 		const body = buildAsyncScrapeBody(
@@ -212,6 +372,9 @@ describe('buildAsyncScrapeBody', () => {
 		);
 		expect(() =>
 			buildAsyncScrapeBody(node, 0, base({ webhookUrl: 'https://hook', webhookMetadata: '{oops' })),
-		).toThrow(/Webhook Metadata/);
+		).toThrow(/^Webhook Metadata is not valid JSON$/);
+		expect(() =>
+			buildAsyncScrapeBody(node, 0, base({ webhookUrl: 'https://hook', webhookMetadata: '[1]' })),
+		).toThrow(/^Webhook Metadata must be a JSON object$/);
 	});
 });
