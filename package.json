@@ -1,6 +1,6 @@
 {
 	"name": "n8n-nodes-crawlbrulee",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "crawlbrulee for n8n — EU-native web scraping for AI agents & developers. scrape any url to markdown, html, links, images, metadata or a screenshot, map a site's urls, and react to finished background scrapes.",
 	"license": "MIT",
 	"homepage": "https://crawlbrulee.com",

@@ -4,6 +4,12 @@ all notable changes to `n8n-nodes-crawlbrulee` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org).
 
+## 1.0.1 (2026-10-09)
+
+### changed
+
+- **docs only.** the readme now says what cleanup removes: ads, popups and cookie banners. the menu and the footer stay unless you exclude them with **Exclude Selectors**. no changes to the node.
+
 ## 1.0.0 (2026-10-09)
 
 ### added
