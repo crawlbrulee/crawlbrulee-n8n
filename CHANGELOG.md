@@ -2,9 +2,9 @@
 
 all notable changes to `n8n-nodes-crawlbrulee` are documented here.
 
-this project follows [Semantic Versioning](https://semver.org). while on `0.x`, minor versions may include breaking changes.
+this project follows [Semantic Versioning](https://semver.org).
 
-## 0.4.0 (2026-10-09)
+## 1.0.0 (2026-10-09)
 
 ### added
 
@@ -13,6 +13,7 @@ this project follows [Semantic Versioning](https://semver.org). while on `0.x`, 
 ### changed
 
 - the **Exclude Selectors** hint no longer says that sending selectors skips the cache. requests with the same selectors now share cached results.
+- builds against `@crawlbrulee/sdk` 1.3.0 for its types. the node still ships no runtime dependencies.
 
 ## 0.3.1 (2026-10-07)
 

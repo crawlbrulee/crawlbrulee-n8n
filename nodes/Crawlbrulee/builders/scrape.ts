@@ -3,6 +3,9 @@ import { NodeOperationError } from 'n8n-workflow';
 import type {
 	AsyncScrapeRequest,
 	ScrapeCleanup,
+	ScrapeElementLeafSpec,
+	ScrapeElementOutput,
+	ScrapeElements,
 	ScrapeExtract,
 	ScrapeLocation,
 	ScrapeRequest,
@@ -22,32 +25,14 @@ export const EXTRACT_KEYS: ExtractKey[] = [
 
 export type ProxyChoice = 'auto' | 'basic' | 'advanced';
 
-export type ElementOutput = 'text' | 'html' | 'attribute';
-
 /** One row of the Elements list in the UI. */
 export interface ElementRow {
 	name?: string;
 	selector?: string;
-	output?: ElementOutput;
+	output?: ScrapeElementOutput;
 	attribute?: string;
 	all?: boolean;
 }
-
-/**
- * One value of `extract.elements`: a selector string (the text of the first match) or an
- * object. Local until `@crawlbrulee/sdk` ships the type; the api docs are the full contract.
- */
-export type ElementSpec =
-	| string
-	| {
-			selector: string;
-			output?: ElementOutput;
-			attribute?: string;
-			all?: boolean;
-			fields?: Record<string, ElementSpec>;
-	  };
-
-type ExtractWithElements = ScrapeExtract & { elements?: Record<string, ElementSpec> };
 
 export interface ScreenshotAction {
 	type: 'wait' | 'scroll';
@@ -190,7 +175,7 @@ function elementFromRow(
 	itemIndex: number,
 	row: ElementRow,
 	name: string,
-): ElementSpec {
+): string | ScrapeElementLeafSpec {
 	const selector = String(row.selector ?? '').trim();
 	if (selector === '') {
 		throw new NodeOperationError(node, `Element "${name}" needs a CSS Selector`, { itemIndex });
@@ -198,7 +183,7 @@ function elementFromRow(
 	const output = row.output ?? 'text';
 	const all = row.all === true;
 	if (output === 'text' && !all) return selector;
-	const spec: Exclude<ElementSpec, string> = { selector };
+	const spec: ScrapeElementLeafSpec = { selector };
 	if (output !== 'text') spec.output = output;
 	if (output === 'attribute') {
 		const attribute = String(row.attribute ?? '').trim();
@@ -219,8 +204,8 @@ export function buildElements(
 	node: INode,
 	itemIndex: number,
 	p: ScrapeParams,
-): Record<string, ElementSpec> | undefined {
-	const elements: Record<string, ElementSpec> = {};
+): ScrapeElements | undefined {
+	const elements: ScrapeElements = {};
 	const twice = (name: string) =>
 		new NodeOperationError(node, `Element name "${name}" is used twice`, {
 			itemIndex,
@@ -236,10 +221,11 @@ export function buildElements(
 		if (Object.prototype.hasOwnProperty.call(elements, name)) throw twice(name);
 		elements[name] = elementFromRow(node, itemIndex, row, name);
 	}
-	const fromJson = parseElementsJson(node, itemIndex, p.options?.elementsJson);
+	// the api checks the rest of each spec; after our own checks it is passed on as is
+	const fromJson = parseElementsJson(node, itemIndex, p.options?.elementsJson) as ScrapeElements;
 	for (const [name, value] of Object.entries(fromJson)) {
 		if (Object.prototype.hasOwnProperty.call(elements, name)) throw twice(name);
-		elements[name] = value as ElementSpec;
+		elements[name] = value;
 	}
 	return Object.keys(elements).length > 0 ? elements : undefined;
 }
@@ -257,7 +243,7 @@ export function buildScrapeBody(node: INode, itemIndex: number, p: ScrapeParams)
 			},
 		);
 	}
-	const extract: ExtractWithElements = {};
+	const extract: ScrapeExtract = {};
 	for (const key of EXTRACT_KEYS) extract[key] = chosen.has(key);
 	if (elements) extract.elements = elements;
 	const screenshot = buildScreenshot(node, itemIndex, p);
