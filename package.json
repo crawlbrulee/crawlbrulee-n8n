@@ -28,7 +28,7 @@
 	"bugs": {
 		"url": "https://github.com/crawlbrulee/crawlbrulee-n8n/issues"
 	},
-	"packageManager": "pnpm@10.10.0",
+	"packageManager": "pnpm@10.24.0",
 	"scripts": {
 		"build": "n8n-node build",
 		"build:watch": "tsc --watch",
