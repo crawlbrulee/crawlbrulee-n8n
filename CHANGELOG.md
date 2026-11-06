@@ -4,7 +4,7 @@ all notable changes to `n8n-nodes-crawlbrulee` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org).
 
-## 1.1.0 (unreleased)
+## 1.1.0 (2026-11-06)
 
 ### added
 

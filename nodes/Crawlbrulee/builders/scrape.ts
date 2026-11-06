@@ -52,16 +52,8 @@ export interface ScrapeCookie {
 	value: string;
 }
 
-/**
- * The request fields `headers` and `cookies`, local until `@crawlbrulee/sdk` 1.4.0 ships them.
- * Remove after sdk 1.4.0 and use `ScrapeRequest` / `AsyncScrapeRequest` again.
- */
-interface HeadersAndCookies {
-	headers?: Record<string, string>;
-	cookies?: ScrapeCookie[];
-}
-export type ScrapeRequestBody = ScrapeRequest & HeadersAndCookies;
-export type AsyncScrapeRequestBody = AsyncScrapeRequest & HeadersAndCookies;
+export type ScrapeRequestBody = ScrapeRequest;
+export type AsyncScrapeRequestBody = AsyncScrapeRequest;
 
 export interface ScreenshotAction {
 	type: 'wait' | 'scroll';
