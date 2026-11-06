@@ -348,6 +348,167 @@ describe('extract.elements', () => {
 	});
 });
 
+describe('headers and cookies', () => {
+	const withRows = (
+		headers?: Array<{ name?: string; value?: string }>,
+		cookies?: Array<{ name?: string; value?: string }>,
+	) =>
+		base({
+			options: {
+				...(headers ? { headers: { header: headers } } : {}),
+				...(cookies ? { cookies: { cookie: cookies } } : {}),
+			},
+		});
+
+	it('sends headers as an object and cookies as name/value pairs', () => {
+		const body = buildScrapeBody(
+			node,
+			0,
+			withRows(
+				[
+					{ name: 'Authorization', value: 'Bearer abc' },
+					{ name: ' X-Tenant-Id ', value: 'acme' },
+				],
+				[{ name: 'session_id', value: 'a1b2c3' }],
+			),
+		);
+		expect(body.headers).toEqual({ Authorization: 'Bearer abc', 'X-Tenant-Id': 'acme' });
+		expect(body.cookies).toEqual([{ name: 'session_id', value: 'a1b2c3' }]);
+	});
+
+	it('omits both fields when the lists are untouched or empty', () => {
+		expect(buildScrapeBody(node, 0, base())).not.toHaveProperty('headers');
+		expect(buildScrapeBody(node, 0, base())).not.toHaveProperty('cookies');
+		const empty = buildScrapeBody(node, 0, withRows([], []));
+		expect(empty).not.toHaveProperty('headers');
+		expect(empty).not.toHaveProperty('cookies');
+		const noRows = buildScrapeBody(
+			node,
+			0,
+			base({ options: { headers: {}, cookies: {} } as ScrapeParams['options'] }),
+		);
+		expect(noRows).not.toHaveProperty('headers');
+		expect(noRows).not.toHaveProperty('cookies');
+	});
+
+	it('skips blank rows, and omits the field when every row is blank', () => {
+		const body = buildScrapeBody(
+			node,
+			0,
+			withRows(
+				[{}, { name: ' ', value: '' }, { name: 'X-Key', value: 'k' }],
+				[{ name: '', value: '  ' }, {}],
+			),
+		);
+		expect(body.headers).toEqual({ 'X-Key': 'k' });
+		expect(body).not.toHaveProperty('cookies');
+	});
+
+	it('sends values exactly as typed, for the api to check', () => {
+		const body = buildScrapeBody(
+			node,
+			0,
+			withRows([{ name: 'X-Key', value: ' padded ' }], [{ name: 'sid', value: 'a;b' }]),
+		);
+		expect(body.headers).toEqual({ 'X-Key': ' padded ' });
+		expect(body.cookies).toEqual([{ name: 'sid', value: 'a;b' }]);
+	});
+
+	it('refuses a row with a Name but no Value, such as an expression that came back empty', () => {
+		const cases: Array<[ScrapeParams, string]> = [
+			[withRows([{ name: 'Authorization', value: '' }]), 'Header "Authorization" has no Value'],
+			[withRows([{ name: 'Authorization' }]), 'Header "Authorization" has no Value'],
+			[withRows([{ name: 'X-Key', value: '   ' }]), 'Header "X-Key" has no Value'],
+			[withRows(undefined, [{ name: 'sid', value: '' }]), 'Cookie "sid" has no Value'],
+		];
+		for (const [params, message] of cases) {
+			expect(() => buildScrapeBody(node, 0, params)).toThrow(message);
+		}
+	});
+
+	it('turns a value set by an expression into a string', () => {
+		const body = buildScrapeBody(
+			node,
+			0,
+			withRows(
+				[{ name: 'X-Count', value: 42 as unknown as string }],
+				[{ name: 'n', value: 7 as unknown as string }],
+			),
+		);
+		expect(body.headers).toEqual({ 'X-Count': '42' });
+		expect(body.cookies).toEqual([{ name: 'n', value: '7' }]);
+	});
+
+	it('needs a name on a row that has a value', () => {
+		expect(() => buildScrapeBody(node, 0, withRows([{ name: '', value: 'x' }]))).toThrow(
+			/^Each Header needs a Name$/,
+		);
+		expect(() =>
+			buildScrapeBody(node, 0, withRows(undefined, [{ name: ' ', value: 'x' }])),
+		).toThrow(/^Each Cookie needs a Name$/);
+	});
+
+	it('refuses the same header name twice, whatever the case', () => {
+		const err = (() => {
+			try {
+				buildScrapeBody(
+					node,
+					0,
+					withRows([
+						{ name: 'X-Key', value: 'a' },
+						{ name: 'x-key', value: 'b' },
+					]),
+				);
+			} catch (e) {
+				return e;
+			}
+		})();
+		expect(err).toBeInstanceOf(NodeOperationError);
+		expect((err as Error).message).toBe('Header "x-key" is used twice');
+	});
+
+	it('keeps header and cookie values out of error messages', () => {
+		const secret = 'Bearer s3cret';
+		for (const params of [
+			withRows([
+				{ name: 'Authorization', value: secret },
+				{ name: 'authorization', value: secret },
+			]),
+			withRows([{ name: '', value: secret }]),
+			withRows(undefined, [{ name: '', value: secret }]),
+		]) {
+			try {
+				buildScrapeBody(node, 0, params);
+				expect.unreachable();
+			} catch (e) {
+				const error = e as NodeOperationError;
+				expect(error.message).not.toContain('s3cret');
+				expect(String(error.description ?? '')).not.toContain('s3cret');
+			}
+		}
+	});
+
+	it('does not count as an output on its own: headers alone still need one', () => {
+		expect(() =>
+			buildScrapeBody(
+				node,
+				0,
+				base({ extract: [], options: { headers: { header: [{ name: 'X-Key', value: 'k' }] } } }),
+			),
+		).toThrow(/Pick at least one Extract output/);
+	});
+
+	it('carries both fields into the async body', () => {
+		const body = buildAsyncScrapeBody(node, 0, {
+			...withRows([{ name: 'X-Key', value: 'k' }], [{ name: 'sid', value: 'v' }]),
+			webhookUrl: 'https://hook',
+		});
+		expect(body.headers).toEqual({ 'X-Key': 'k' });
+		expect(body.cookies).toEqual([{ name: 'sid', value: 'v' }]);
+		expect(body.webhook).toEqual({ url: 'https://hook' });
+	});
+});
+
 describe('buildAsyncScrapeBody', () => {
 	it('adds the webhook when a url is set, parsing json metadata', () => {
 		const body = buildAsyncScrapeBody(

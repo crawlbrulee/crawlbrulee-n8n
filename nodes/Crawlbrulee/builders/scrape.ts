@@ -34,6 +34,35 @@ export interface ElementRow {
 	all?: boolean;
 }
 
+/** One row of the Headers list in the UI. */
+export interface HeaderRow {
+	name?: string;
+	value?: string;
+}
+
+/** One row of the Cookies list in the UI. */
+export interface CookieRow {
+	name?: string;
+	value?: string;
+}
+
+/** A cookie as the api takes it. */
+export interface ScrapeCookie {
+	name: string;
+	value: string;
+}
+
+/**
+ * The request fields `headers` and `cookies`, local until `@crawlbrulee/sdk` 1.4.0 ships them.
+ * Remove after sdk 1.4.0 and use `ScrapeRequest` / `AsyncScrapeRequest` again.
+ */
+interface HeadersAndCookies {
+	headers?: Record<string, string>;
+	cookies?: ScrapeCookie[];
+}
+export type ScrapeRequestBody = ScrapeRequest & HeadersAndCookies;
+export type AsyncScrapeRequestBody = AsyncScrapeRequest & HeadersAndCookies;
+
 export interface ScreenshotAction {
 	type: 'wait' | 'scroll';
 	value: number;
@@ -62,6 +91,8 @@ export interface ScrapeParams {
 		country?: string;
 		zeroDataRetention?: boolean;
 		elementsJson?: string | Record<string, unknown>;
+		headers?: { header?: HeaderRow[] };
+		cookies?: { cookie?: CookieRow[] };
 	};
 	webhookUrl?: string;
 	webhookMetadata?: string | Record<string, unknown>;
@@ -230,7 +261,80 @@ export function buildElements(
 	return Object.keys(elements).length > 0 ? elements : undefined;
 }
 
-export function buildScrapeBody(node: INode, itemIndex: number, p: ScrapeParams): ScrapeRequest {
+/** The Headers list as an object. Undefined when it is empty. */
+export function buildHeaders(
+	node: INode,
+	itemIndex: number,
+	rows: HeaderRow[] | undefined,
+): Record<string, string> | undefined {
+	const headers: Record<string, string> = {};
+	const seen = new Set<string>();
+	for (const row of rows ?? []) {
+		const name = String(row.name ?? '').trim();
+		const value = String(row.value ?? '');
+		// a fully blank row is skipped, like a blank Element
+		if (name === '' && value.trim() === '') continue;
+		if (name === '') {
+			throw new NodeOperationError(node, 'Each Header needs a Name', { itemIndex });
+		}
+		if (value.trim() === '') throw noValue(node, itemIndex, 'Header', name);
+		// the api reads header names without case, so X-Key and x-key are the same header
+		if (seen.has(name.toLowerCase())) {
+			throw new NodeOperationError(node, `Header "${name}" is used twice`, {
+				itemIndex,
+				description: 'Header names are read without case. Each one may be used once.',
+			});
+		}
+		seen.add(name.toLowerCase());
+		// values go as typed: the api checks them and its error names the header
+		headers[name] = value;
+	}
+	return Object.keys(headers).length > 0 ? headers : undefined;
+}
+
+/** The Cookies list as `[{ name, value }]`. Undefined when it is empty. */
+export function buildCookies(
+	node: INode,
+	itemIndex: number,
+	rows: CookieRow[] | undefined,
+): ScrapeCookie[] | undefined {
+	const cookies: ScrapeCookie[] = [];
+	for (const row of rows ?? []) {
+		const name = String(row.name ?? '').trim();
+		const value = String(row.value ?? '');
+		if (name === '' && value.trim() === '') continue;
+		if (name === '') {
+			throw new NodeOperationError(node, 'Each Cookie needs a Name', { itemIndex });
+		}
+		if (value.trim() === '') throw noValue(node, itemIndex, 'Cookie', name);
+		cookies.push({ name, value });
+	}
+	return cookies.length > 0 ? cookies : undefined;
+}
+
+/**
+ * A row with a Name but no Value. The api would take an empty value, but in a
+ * workflow it is almost always an expression that came back empty for this
+ * item (a missing token), and the scrape would run logged out and be billed.
+ */
+function noValue(
+	node: INode,
+	itemIndex: number,
+	kind: 'Header' | 'Cookie',
+	name: string,
+): NodeOperationError {
+	return new NodeOperationError(node, `${kind} "${name}" has no Value`, {
+		itemIndex,
+		description:
+			'If the Value is an expression, check that it is set for this item. To send nothing, remove the row.',
+	});
+}
+
+export function buildScrapeBody(
+	node: INode,
+	itemIndex: number,
+	p: ScrapeParams,
+): ScrapeRequestBody {
 	const chosen = new Set(p.extract ?? []);
 	const elements = buildElements(node, itemIndex, p);
 	if (chosen.size === 0 && !elements && p.screenshotType === 'none') {
@@ -249,7 +353,7 @@ export function buildScrapeBody(node: INode, itemIndex: number, p: ScrapeParams)
 	const screenshot = buildScreenshot(node, itemIndex, p);
 	if (screenshot) extract.screenshot = screenshot;
 
-	const body: ScrapeRequest = { url: p.url, extract };
+	const body: ScrapeRequestBody = { url: p.url, extract };
 	const o = p.options ?? {};
 
 	if (o.proxy) body.proxy = o.proxy;
@@ -272,6 +376,11 @@ export function buildScrapeBody(node: INode, itemIndex: number, p: ScrapeParams)
 	if (country !== '') location.country = country;
 	if (Object.keys(location).length > 0) body.location = location;
 
+	const headers = buildHeaders(node, itemIndex, o.headers?.header);
+	if (headers) body.headers = headers;
+	const cookies = buildCookies(node, itemIndex, o.cookies?.cookie);
+	if (cookies) body.cookies = cookies;
+
 	return body;
 }
 
@@ -292,8 +401,8 @@ export function buildAsyncScrapeBody(
 	node: INode,
 	itemIndex: number,
 	p: ScrapeParams,
-): AsyncScrapeRequest {
-	const body: AsyncScrapeRequest = buildScrapeBody(node, itemIndex, p);
+): AsyncScrapeRequestBody {
+	const body: AsyncScrapeRequestBody = buildScrapeBody(node, itemIndex, p);
 	const url = (p.webhookUrl ?? '').trim();
 	const metadata = parseMetadata(node, itemIndex, p.webhookMetadata);
 	if (!url) {

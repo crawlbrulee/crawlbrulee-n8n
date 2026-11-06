@@ -93,7 +93,7 @@ with a **heading** row (`h1`, Text), the item's json gets this (the page has 20 
 }
 ```
 
-a name with no match is `null` (`[]` with All Matches). selector rules and limits: see [elements](https://crawlbrulee.com/docs/scrape/elements).
+a name with no match is `null` (`[]` with All Matches). selector rules and limits: see [targeted extraction](https://crawlbrulee.com/docs/scrape/targeted-extraction).
 
 ### screenshots as files
 
@@ -114,6 +114,18 @@ a page the site really served is a normal item, whatever its status. a 404, 410 
 ### zero data retention
 
 turn on **Zero Data Retention** under **Options** of **Scrape URL**, **Scrape URL (Async)** or **Map Website** to keep the result out of the shared cache. anything stored to deliver it is kept for 24 hours, then deleted. it adds 1 credit and must be enabled for your organization. if it is not, the call fails with a clear message and costs no credits. see [zero data retention](https://crawlbrulee.com/docs/zero-data-retention).
+
+### headers and cookies
+
+to send your own HTTP headers and cookies to the site, for example an `Authorization` header or a fixed `User-Agent` that a site has on its allowlist, add **Headers** or **Cookies** under **Options** of **Scrape URL** or **Scrape URL (Async)**. add one row per header or cookie, with a **Name** and a **Value**. a row with a name but an empty value stops the node with an error, because that is usually an expression that came back empty for this item. header values show in the editor as typed; n8n hides cookie values. both are saved with the workflow, so clear any secret before you share or export the workflow.
+
+- headers go only to the origin of the url (same scheme, host and port), or to its https version when the url is http, and not on a redirect to another origin. cookies go only to the host of the url.
+- a request with headers or cookies is never cached: it never reads from or writes to the cache, so each run is a fresh scrape. it costs the same as any fresh scrape, with no extra fee.
+- use **Locale** for the language, not an `Accept-Language` header, and **Cookies** for cookies, not a `Cookie` header.
+- your own `User-Agent` can lower the success rate, and the item then carries the `custom_user_agent` warning in `warnings`. never put secrets in the `User-Agent`.
+- on a plain `http://` url, headers and cookies travel unencrypted.
+
+a header the api does not take comes back as an error that names it. rules and limits: see [headers and cookies](https://crawlbrulee.com/docs/scrape/custom-headers-and-cookies).
 
 ### what a call cost
 

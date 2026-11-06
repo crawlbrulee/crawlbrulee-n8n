@@ -65,7 +65,7 @@ describe('crawlbrulee node properties', () => {
 		expect(list.type).toBe('fixedCollection');
 		expect(list.typeOptions?.multipleValues).toBe(true);
 		expect(list.displayOptions?.show?.operation).toEqual(['scrape', 'scrapeAsync']);
-		expect(list.description).toContain('https://crawlbrulee.com/docs/scrape/elements');
+		expect(list.description).toContain('https://crawlbrulee.com/docs/scrape/targeted-extraction');
 		const values = (list.options as Array<{ values: INodeProperties[] }>)[0].values;
 		expect(values.map((v) => v.name).sort()).toEqual([
 			'all',
@@ -86,7 +86,50 @@ describe('crawlbrulee node properties', () => {
 		const json = (options.options as INodeProperties[]).find((o) => o.name === 'elementsJson')!;
 		expect(json.displayName).toBe('Elements (JSON)');
 		expect(json.type).toBe('json');
-		expect(json.description).toContain('https://crawlbrulee.com/docs/scrape/elements');
+		expect(json.description).toContain('https://crawlbrulee.com/docs/scrape/targeted-extraction');
+	});
+
+	it('offers Headers and Cookies lists under Options on scrape and scrape async; only cookie values are hidden', () => {
+		const owners = find('options', (p) =>
+			(p.options as INodeProperties[]).some((o) => o.name === 'headers' || o.name === 'cookies'),
+		);
+		expect(owners).toHaveLength(1);
+		expect(owners[0].displayOptions?.show?.operation).toEqual(['scrape', 'scrapeAsync']);
+		const opts = owners[0].options as INodeProperties[];
+		const cases: Array<[string, string, string, boolean | undefined]> = [
+			['headers', 'Headers', 'header', undefined],
+			['cookies', 'Cookies', 'cookie', true],
+		];
+		for (const [name, displayName, row, hidden] of cases) {
+			const list = opts.find((o) => o.name === name)!;
+			expect(list.displayName).toBe(displayName);
+			expect(list.type).toBe('fixedCollection');
+			expect(list.typeOptions?.multipleValues).toBe(true);
+			expect(list.default).toEqual({});
+			expect(list.description).toContain(
+				'https://crawlbrulee.com/docs/scrape/custom-headers-and-cookies',
+			);
+			expect(list.description).toMatch(/never cached/);
+			const groups = list.options as Array<{ name: string; values: INodeProperties[] }>;
+			expect(groups.map((g) => g.name)).toEqual([row]);
+			const values = groups[0].values;
+			expect(values.map((v) => v.name)).toEqual(['name', 'value']);
+			const value = values.find((v) => v.name === 'value')!;
+			expect(value.typeOptions?.password).toBe(hidden);
+			expect(values.find((v) => v.name === 'name')!.typeOptions?.password).toBeUndefined();
+		}
+		const headers = opts.find((o) => o.name === 'headers')!;
+		expect(headers.description).toContain('custom_user_agent');
+		expect(headers.description).toMatch(/only to the origin/);
+		expect(opts.find((o) => o.name === 'cookies')!.description).toMatch(/only to the host/);
+	});
+
+	it('does not offer Headers or Cookies on Map Website', () => {
+		const map = find('options', (p) => p.displayOptions?.show?.resource?.[0] === 'map')[0];
+		expect(map).toBeDefined();
+		const names = (map.options as INodeProperties[]).map((o) => o.name);
+		expect(names).not.toContain('headers');
+		expect(names).not.toContain('cookies');
 	});
 
 	it('shows webhook fields only for async scrape', () => {

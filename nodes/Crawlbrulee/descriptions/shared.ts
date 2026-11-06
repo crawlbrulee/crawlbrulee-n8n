@@ -55,6 +55,5 @@ export const localeOption: INodeProperties = {
 	type: 'string',
 	default: '',
 	placeholder: 'e.g. en-US',
-	description:
-		'BCP-47 locale sent as Accept-Language and used by the browser when rendering JavaScript',
+	description: 'BCP-47 locale, for example en-US: the language to ask the site for',
 };

@@ -8,7 +8,45 @@ import {
 } from './shared';
 
 const ELEMENTS_DOCS =
-	'Selector rules and limits: <a href="https://crawlbrulee.com/docs/scrape/elements">elements docs</a>';
+	'Selector rules and limits: <a href="https://crawlbrulee.com/docs/scrape/targeted-extraction">targeted extraction docs</a>';
+
+const HEADERS_DOCS =
+	'Rules and limits: <a href="https://crawlbrulee.com/docs/scrape/custom-headers-and-cookies">headers and cookies docs</a>';
+
+/** The fields of one Headers row. A header value is often not a secret (a User-Agent, a tenant id), so it shows as typed. */
+const headerFields: INodeProperties[] = [
+	{
+		displayName: 'Name',
+		name: 'name',
+		type: 'string',
+		default: '',
+		placeholder: 'e.g. Authorization',
+	},
+	{
+		displayName: 'Value',
+		name: 'value',
+		type: 'string',
+		default: '',
+	},
+];
+
+/** The fields of one Cookies row. A cookie value is almost always a session, so the editor hides it. */
+const cookieFields: INodeProperties[] = [
+	{
+		displayName: 'Name',
+		name: 'name',
+		type: 'string',
+		default: '',
+		placeholder: 'e.g. session_id',
+	},
+	{
+		displayName: 'Value',
+		name: 'value',
+		type: 'string',
+		typeOptions: { password: true },
+		default: '',
+	},
+];
 
 const resourceShow = { resource: ['scrape'] };
 const urlShow = { resource: ['scrape'], operation: ['scrape', 'scrapeAsync'] };
@@ -307,6 +345,22 @@ export const scrapeFields: INodeProperties[] = [
 		displayOptions: { show: urlShow },
 		options: [
 			cacheMaxAgeOption('2 days'),
+			{
+				displayName: 'Cookies',
+				name: 'cookies',
+				type: 'fixedCollection',
+				typeOptions: { multipleValues: true },
+				placeholder: 'Add Cookie',
+				default: {},
+				description: `Your own cookies to send to the site with the request. Sent only to the host of the URL. A request with headers or cookies is never cached. ${HEADERS_DOCS}.`,
+				options: [
+					{
+						name: 'cookie',
+						displayName: 'Cookie',
+						values: cookieFields,
+					},
+				],
+			},
 			countryOption,
 			{
 				displayName: 'Elements (JSON)',
@@ -326,6 +380,22 @@ export const scrapeFields: INodeProperties[] = [
 				placeholder: 'e.g. .cookie-banner',
 				description:
 					'CSS selectors removed before anything is extracted, Elements included, except Raw HTML. Requests with different selectors do not share cached results.',
+			},
+			{
+				displayName: 'Headers',
+				name: 'headers',
+				type: 'fixedCollection',
+				typeOptions: { multipleValues: true },
+				placeholder: 'Add Header',
+				default: {},
+				description: `Your own HTTP headers to send to the site with the request, for example Authorization, an API key, or a fixed User-Agent that the site has on an allowlist. Sent only to the origin of the URL (or its HTTPS version, for an HTTP URL), not on a redirect to another origin. Use Cookies for cookies and Locale for the language. Your own User-Agent can lower the success rate and adds the custom_user_agent warning; never put secrets in it. A request with headers or cookies is never cached. ${HEADERS_DOCS}.`,
+				options: [
+					{
+						name: 'header',
+						displayName: 'Header',
+						values: headerFields,
+					},
+				],
 			},
 			localeOption,
 			proxyOption,

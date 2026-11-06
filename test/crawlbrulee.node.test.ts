@@ -197,6 +197,48 @@ describe('Crawlbrulee node', () => {
 		});
 	});
 
+	it('sends headers and cookies from Options and passes the custom_user_agent warning through', async () => {
+		const body = {
+			url: 'https://app.example.com/orders',
+			page_status_code: 200,
+			markdown: '# Orders',
+			warnings: ['custom_user_agent', 'some_future_warning'],
+		};
+		for (const operation of ['scrape', 'scrapeAsync']) {
+			const { self, httpRequestWithAuthentication } = ctx(
+				{
+					resource: 'scrape',
+					operation,
+					url: 'https://app.example.com/orders',
+					extract: ['markdown'],
+					screenshotType: 'none',
+					screenshotOptions: {},
+					options: {
+						headers: {
+							header: [
+								{ name: 'Authorization', value: 'Bearer abc' },
+								{ name: 'User-Agent', value: 'my-bot/1.0' },
+							],
+						},
+						cookies: { cookie: [{ name: 'session_id', value: 'a1b2c3' }] },
+					},
+					webhookUrl: '',
+					webhookMetadata: '',
+				},
+				{ statusCode: 200, body },
+			);
+			const [out] = await node.execute.call(self);
+			expect(out[0].json).toEqual(body);
+			const sent = httpRequestWithAuthentication.mock.calls[0][1].body;
+			expect(sent.headers).toEqual({ Authorization: 'Bearer abc', 'User-Agent': 'my-bot/1.0' });
+			expect(sent.cookies).toEqual([{ name: 'session_id', value: 'a1b2c3' }]);
+			// the node's own User-Agent goes to the crawlbrulee api, never into the body
+			expect(httpRequestWithAuthentication.mock.calls[0][1].headers['User-Agent']).toMatch(
+				/^n8n-nodes-crawlbrulee\//,
+			);
+		}
+	});
+
 	it('passes the map usage fields through', async () => {
 		const body = {
 			links: [],

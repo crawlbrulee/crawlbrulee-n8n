@@ -4,6 +4,17 @@ all notable changes to `n8n-nodes-crawlbrulee` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org).
 
+## 1.1.0 (unreleased)
+
+### added
+
+- **Headers** and **Cookies** under **Options** of **Scrape URL** and **Scrape URL (Async)**: send your own HTTP headers and cookies to the site, for example an `Authorization` header or a fixed `User-Agent` that a site has on its allowlist. one row per header or cookie, with a **Name** and a **Value**; header values show as typed; n8n hides cookie values in the editor. headers go only to the origin of the url (or its https version, for an http url), cookies only to its host. a request with headers or cookies is never cached, and costs the same as any fresh scrape. a blank row is skipped; a header name used twice, or a row with a name but no value, is an error. see [headers and cookies](https://crawlbrulee.com/docs/scrape/custom-headers-and-cookies).
+- the `custom_user_agent` warning passes through in `warnings` when you set your own `User-Agent` header. it means this can lower the success rate.
+
+### compatibility
+
+- both lists are empty by default and nothing is sent until you add a row. the node still ships no runtime dependencies.
+
 ## 1.0.1 (2026-10-09)
 
 ### changed
