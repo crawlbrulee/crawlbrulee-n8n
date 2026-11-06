@@ -64,7 +64,7 @@ every field has a hint in n8n. three things the hints don't tell you:
 
 **Elements** reads named values from the page by CSS selector. add one row per value: a **Name**, a **CSS Selector**, the **Output** (Text, HTML or an Attribute such as `href`), and **All Matches** to get every match as a list. they come back in `elements`, under the names you gave. elements cost no extra credits. **Extract** starts on Cleaned HTML and Metadata, so clear it to get only the elements.
 
-for a value per match, like a title, price and link per product card, put the request in **Elements (JSON)** under **Options**. it is merged with the list, and each name may be used once:
+for a value per match, like a title, price and link per product, put the request in **Elements (JSON)** under **Options**. it is merged with the list, and each name may be used once:
 
 ```json
 {

@@ -369,7 +369,7 @@ export const scrapeFields: INodeProperties[] = [
 				default: '',
 				placeholder:
 					'e.g. {"books": {"selector": "article.product_pod", "all": true, "fields": {"title": {"selector": "h3 a", "output": "attribute", "attribute": "title"}, "price": ".price_color"}}}',
-				description: `Elements as a JSON object, merged with the Elements list. Use it for fields, which read values inside each match, like a title and price per product card. ${ELEMENTS_DOCS}.`,
+				description: `Elements as a JSON object, merged with the Elements list. Use it for fields, which read values inside each match (:scope reads the match itself), like a title and price per product. ${ELEMENTS_DOCS}.`,
 			},
 			{
 				displayName: 'Exclude Selectors',
