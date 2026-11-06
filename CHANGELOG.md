@@ -16,6 +16,11 @@ this project follows [Semantic Versioning](https://semver.org).
 
 - both lists are empty by default and nothing is sent until you add a row. the node still ships no runtime dependencies.
 
+### changed
+
+- the elements placeholder and the readme use a made-up shop for their example (`article.book`, `.price`), instead of the markup of a scraping sandbox run by another company.
+- depends on `@crawlbrulee/sdk` 1.4.0 (types only).
+
 ## 1.0.1 (2026-10-09)
 
 ### changed

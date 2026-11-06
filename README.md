@@ -69,11 +69,11 @@ for a value per match, like a title, price and link per product, put the request
 ```json
 {
   "books": {
-    "selector": "article.product_pod",
+    "selector": "article.book",
     "all": true,
     "fields": {
       "title": { "selector": "h3 a", "output": "attribute", "attribute": "title" },
-      "price": ".price_color"
+      "price": ".price"
     }
   }
 }
@@ -84,10 +84,10 @@ with a **heading** row (`h1`, Text), the item's json gets this (the page has 20 
 ```json
 {
   "elements": {
-    "heading": "All products",
+    "heading": "Books",
     "books": [
-      { "title": "A Light in the Attic", "price": "£51.77" },
-      { "title": "Tipping the Velvet", "price": "£53.74" }
+      { "title": "The Night Garden", "price": "€18.90" },
+      { "title": "Salt and Stone", "price": "€22.50" }
     ]
   }
 }

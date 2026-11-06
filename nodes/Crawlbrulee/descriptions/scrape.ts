@@ -368,7 +368,7 @@ export const scrapeFields: INodeProperties[] = [
 				type: 'json',
 				default: '',
 				placeholder:
-					'e.g. {"books": {"selector": "article.product_pod", "all": true, "fields": {"title": {"selector": "h3 a", "output": "attribute", "attribute": "title"}, "price": ".price_color"}}}',
+					'e.g. {"books": {"selector": "article.book", "all": true, "fields": {"title": {"selector": "h3 a", "output": "attribute", "attribute": "title"}, "price": ".price"}}}',
 				description: `Elements as a JSON object, merged with the Elements list. Use it for fields, which read values inside each match (:scope reads the match itself), like a title and price per product. ${ELEMENTS_DOCS}.`,
 			},
 			{

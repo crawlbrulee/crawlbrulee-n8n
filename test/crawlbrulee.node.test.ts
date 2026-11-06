@@ -161,16 +161,20 @@ describe('Crawlbrulee node', () => {
 
 	it('sends extract.elements and returns elements as the api gives them', async () => {
 		const elements = {
-			heading: 'All products',
-			books: [{ title: 'A Light in the Attic', price: '£51.77', url: null }],
-			next_page: 'https://books.toscrape.com/catalogue/page-2.html',
+			heading: 'Books',
+			books: [{ title: 'The Night Garden', price: '€18.90', url: null }],
+			next_page: 'https://shop.example.com/books/?page=2',
 		};
-		const body = { url: 'https://books.toscrape.com/', elements, warnings: ['elements_truncated'] };
+		const body = {
+			url: 'https://shop.example.com/books/',
+			elements,
+			warnings: ['elements_truncated'],
+		};
 		const { self, httpRequestWithAuthentication } = ctx(
 			{
 				resource: 'scrape',
 				operation: 'scrape',
-				url: 'https://books.toscrape.com/',
+				url: 'https://shop.example.com/books/',
 				extract: [],
 				elements: {
 					element: [
@@ -182,7 +186,7 @@ describe('Crawlbrulee node', () => {
 				screenshotOptions: {},
 				options: {
 					elementsJson:
-						'{"books": {"selector": "article.product_pod", "all": true, "fields": {"price": ".price_color"}}}',
+						'{"books": {"selector": "article.book", "all": true, "fields": {"price": ".price"}}}',
 				},
 			},
 			{ statusCode: 200, body },
@@ -193,7 +197,7 @@ describe('Crawlbrulee node', () => {
 		expect(sent).toEqual({
 			heading: 'h1',
 			next_page: { selector: 'li.next a', output: 'attribute', attribute: 'href' },
-			books: { selector: 'article.product_pod', all: true, fields: { price: '.price_color' } },
+			books: { selector: 'article.book', all: true, fields: { price: '.price' } },
 		});
 	});
 

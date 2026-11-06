@@ -197,11 +197,11 @@ describe('buildScrapeBody', () => {
 
 describe('extract.elements', () => {
 	const books = {
-		selector: 'article.product_pod',
+		selector: 'article.book',
 		all: true,
 		fields: {
 			title: { selector: 'h3 a', output: 'attribute', attribute: 'title' },
-			price: '.price_color',
+			price: '.price',
 		},
 	};
 
@@ -214,7 +214,7 @@ describe('extract.elements', () => {
 					element: [
 						{ name: 'heading', selector: ' h1 ', output: 'text', all: false },
 						{ name: 'next_page', selector: 'li.next a', output: 'attribute', attribute: 'href' },
-						{ name: 'prices', selector: '.price_color', output: 'text', all: true },
+						{ name: 'prices', selector: '.price', output: 'text', all: true },
 						{ name: 'card', selector: 'article', output: 'html', attribute: 'ignored' },
 					],
 				},
@@ -224,7 +224,7 @@ describe('extract.elements', () => {
 			elements: {
 				heading: 'h1',
 				next_page: { selector: 'li.next a', output: 'attribute', attribute: 'href' },
-				prices: { selector: '.price_color', all: true },
+				prices: { selector: '.price', all: true },
 				card: { selector: 'article', output: 'html' },
 			},
 		});
