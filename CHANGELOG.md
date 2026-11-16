@@ -4,6 +4,13 @@ all notable changes to `n8n-nodes-crawlbrulee` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org).
 
+## 1.2.0 (unreleased)
+
+### changed
+
+- **Extract** now starts with **Markdown** and **Metadata** ticked, instead of **Cleaned HTML** and **Metadata**, the same default as the api.
+- ⚠️ n8n does not save a field that still has its default value. so a **Scrape URL** or **Scrape URL (Async)** node where you never changed **Extract** now returns markdown + metadata instead of cleaned html + metadata. to keep cleaned html, open the node and tick **Cleaned HTML** under **Extract**. nodes where you changed **Extract** keep what you picked.
+
 ## 1.1.0 (2026-11-06)
 
 ### added

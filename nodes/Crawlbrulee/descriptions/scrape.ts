@@ -139,7 +139,7 @@ export const scrapeFields: INodeProperties[] = [
 			},
 			{ name: 'Raw HTML', value: 'raw_html', description: 'The page HTML exactly as it arrived' },
 		],
-		default: ['cleaned_html', 'metadata'],
+		default: ['markdown', 'metadata'],
 		description: 'Which outputs to return',
 		displayOptions: { show: urlShow },
 	},

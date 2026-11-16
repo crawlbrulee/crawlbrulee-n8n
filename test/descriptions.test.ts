@@ -28,9 +28,9 @@ describe('crawlbrulee node properties', () => {
 		]);
 	});
 
-	it('defaults extract to cleaned html + metadata and proxy to auto', () => {
+	it('defaults extract to markdown + metadata and proxy to auto', () => {
 		const extract = find('extract')[0];
-		expect(extract.default).toEqual(['cleaned_html', 'metadata']);
+		expect(extract.default).toEqual(['markdown', 'metadata']);
 		const options = find(
 			'options',
 			(p) => p.displayOptions?.show?.operation?.includes('scrape') === true,
