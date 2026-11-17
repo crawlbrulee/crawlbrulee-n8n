@@ -4,11 +4,24 @@ all notable changes to `n8n-nodes-crawlbrulee` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org).
 
-## 1.2.0 (unreleased)
+## 1.2.0 (2026-11-18)
+
+### added
+
+- **PDF** on **Scrape URL** and **Scrape URL (Async)**: save the page as a pdf, with selectable text and working links. **PDF Options** sets the **Layout** (Pages, the default, or Single Page), the **Paper** (A4 or Letter), **Landscape** and the **Media** (Screen, the default, or Print); Paper and Landscape work only with Pages. the item gets `pdf` with a signed `url` that expires 24 hours after the scrape, and its size in `bytes`. it costs what a screenshot costs, and a pdf and a screenshot in one request are billed once. the new warnings `pdf_unavailable` and `pdf_single_page_overflow` pass through in `warnings`, and the new error `unsupported_pdf_output` shows the api's message. see [pdf](https://crawlbrulee.com/docs/scrape/pdf).
+- **Download PDF** on **Scrape URL** and **Get Scrape Result**: attaches the pdf as binary data under `pdf`, like **Download Screenshot**. a failed download keeps the item and sets `pdf_download_error`.
+- **Color Scheme** under **Screenshot Options**: Light (the default) or Dark, which asks the site for its dark theme. a pdf in the same request shows it too. no extra credits.
+- **Sitemap URL**, **Depth**, **Entries** and **Modified Since** under **Options** of **Map Website**. **Sitemap URL** starts from one sitemap file on the same site, or on a host the site's robots.txt names. **Depth** sets how many levels of nested sitemaps to follow (0 to 3, 3 by default). **Entries** returns Pages (the default), Sitemaps or All. **Modified Since** keeps only entries whose `lastmod` is at or after a date and time. together they map a very large site in several calls: list its sitemap files, then read each one. every map link now carries `type` (`page` or `sitemap`) and `lastmod`, and `response_meta.truncation` carries `total_before_max_results` and `unread_sitemaps`; they pass through unchanged. see [map](https://crawlbrulee.com/docs/map).
+- **Modified Since** reads a date and time with no time zone in the workflow's time zone (its setting, else the instance's), as n8n's date picker means it, and sends it in UTC. a value with its own time zone is sent as is.
+
+### compatibility
+
+- every new field is off or empty by default, so a saved workflow sends the same request as before, with one change: **Max URLs** on **Map Website** is now labeled **Max Results** and sends the api's new name for the same limit. the field keeps its internal name, so a saved workflow keeps its value. the node still ships no runtime dependencies.
 
 ### changed
 
 - **Extract** now starts with **Markdown** and **Metadata** ticked, instead of **Cleaned HTML** and **Metadata**, the same default as the api.
+- the readme teaches the new map fields and the several-calls flow, and says that a **Scrape URL (Async)** job that asks only for a screenshot or a pdf and gets none ends as failed and costs no credits.
 - ⚠️ n8n does not save a field that still has its default value. so a **Scrape URL** or **Scrape URL (Async)** node where you never changed **Extract** now returns markdown + metadata instead of cleaned html + metadata. to keep cleaned html, open the node and tick **Cleaned HTML** under **Extract**. nodes where you changed **Extract** keep what you picked.
 
 ## 1.1.0 (2026-11-06)

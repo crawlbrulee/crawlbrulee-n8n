@@ -50,3 +50,41 @@ export async function attachScreenshots(
 	if (failures.length > 0) json.screenshot_download_error = failures.join('; ');
 	return Object.keys(binary).length > 0 ? binary : undefined;
 }
+
+/**
+ * The response field `pdf`, local until the sdk ships it. Then remove this and use the
+ * sdk's type again.
+ */
+interface PdfResult {
+	url: string;
+	bytes: number;
+}
+
+/** The file name for the PDF: the page's host, so items from different sites differ. */
+function pdfFileName(pageUrl: unknown): string {
+	try {
+		const host = new URL(String(pageUrl)).hostname;
+		return host ? `${host}.pdf` : 'page.pdf';
+	} catch {
+		return 'page.pdf';
+	}
+}
+
+/**
+ * Pull the PDF from a scrape response into binary data under `pdf`. Like the screenshot,
+ * a failed download keeps the item and reports the reason on `json.pdf_download_error`.
+ */
+export async function attachPdf(
+	this: BinaryContext,
+	json: IDataObject,
+): Promise<IBinaryKeyData | undefined> {
+	const pdf = json.pdf as PdfResult | undefined;
+	if (!pdf?.url) return undefined;
+	try {
+		const file = await download.call(this, pdf.url, pdfFileName(json.url), 'application/pdf');
+		return { pdf: file };
+	} catch (error) {
+		json.pdf_download_error = `pdf: ${error instanceof Error ? error.message : String(error)}`;
+		return undefined;
+	}
+}

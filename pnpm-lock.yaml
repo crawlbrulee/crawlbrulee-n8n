@@ -9,17 +9,23 @@ importers:
   .:
     devDependencies:
       '@crawlbrulee/sdk':
-        specifier: ^1.4.0
-        version: 1.4.0
+        specifier: ^1.5.0
+        version: 1.5.0
       '@n8n/node-cli':
         specifier: 0.48.6
         version: 0.48.6(@browserbasehq/sdk@2.20.0)(@browserbasehq/stagehand@1.14.0(@playwright/test@1.63.0)(deepmerge@4.3.1)(dotenv@16.6.1)(openai@6.49.0(ws@8.21.3)(zod@3.25.76))(zod@3.25.76))(@ibm-cloud/watsonx-ai@1.7.16)(@opentelemetry/api@1.9.1)(@opentelemetry/core@2.11.0(@opentelemetry/api@1.9.1))(@opentelemetry/sdk-trace-base@2.11.0(@opentelemetry/api@1.9.1))(@typescript-eslint/utils@8.70.1(eslint@9.32.0)(typescript@5.9.2))(eslint@9.32.0)(ibm-cloud-sdk-core@5.6.2)(ignore@7.0.9)(jsonwebtoken@9.0.3)(n8n-workflow@2.16.0)(openai@6.49.0(ws@8.21.3)(zod@3.25.76))(playwright@1.63.0)(typescript@5.9.2)(ws@8.21.3)
+      '@types/luxon':
+        specifier: 3.7.6
+        version: 3.7.6
       '@types/node':
         specifier: ^22.0.0
         version: 22.20.4
       eslint:
         specifier: 9.32.0
         version: 9.32.0
+      luxon:
+        specifier: 3.7.2
+        version: 3.7.2
       n8n-workflow:
         specifier: '*'
         version: 2.16.0
@@ -99,8 +105,8 @@ packages:
     resolution: {integrity: sha512-dTmUJzXSuayBK+hZydEaXd2mhx61qWQwkwaBBY6LyEOVx/L9aQU5ac8eFNEsd9nrD1+zb9zvDCphLSe8g1F4Qw==}
     engines: {node: '>=0.1.90'}
 
-  '@crawlbrulee/sdk@1.4.0':
-    resolution: {integrity: sha512-twfC3B+RQOaF0adRJ8MmRboXD8Gtbl66CPjPXfMjHmxSPpVziapecOYy9YZH4maY5ytNyJiNO19iCUMkiO6E1Q==}
+  '@crawlbrulee/sdk@1.5.0':
+    resolution: {integrity: sha512-H/w0ffSBtOHGxPgqFHFaEw4ikrGrfNmmu6UAFyIW8rDAdeYIthNP0T2mvzlFXMzXHDPXEu79gEt/I21EfJKclw==}
     engines: {node: '>=22'}
 
   '@dabh/diagnostics@2.0.9':
@@ -1244,6 +1250,9 @@ packages:
 
   '@types/json-schema@7.0.15':
     resolution: {integrity: sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==}
+
+  '@types/luxon@3.7.6':
+    resolution: {integrity: sha512-6KSjliQAXK8ZLgFQO4B7iE4Rpf/B3rItzCFuXezBY/XIAGxOdLd7vRNK9/StRPwiS/yJsVbB7HKpW46B8tcEuQ==}
 
   '@types/ms@2.1.0':
     resolution: {integrity: sha512-GsCCIZDE/p3i96vtEqx+7dBUGXrc7zeSK3wwPHIaRThS+9OhWIXRqzs4d6k1SVU8g91DrNRWxWUGhp5KXQb2VA==}
@@ -3400,7 +3409,7 @@ snapshots:
 
   '@colors/colors@1.6.1': {}
 
-  '@crawlbrulee/sdk@1.4.0': {}
+  '@crawlbrulee/sdk@1.5.0': {}
 
   '@dabh/diagnostics@2.0.9':
     dependencies:
@@ -4651,6 +4660,8 @@ snapshots:
 
   '@types/json-schema@7.0.15': {}
 
+  '@types/luxon@3.7.6': {}
+
   '@types/ms@2.1.0': {}
 
   '@types/node-fetch@2.6.13':
@@ -5630,7 +5641,7 @@ snapshots:
       jsonwebtoken: 9.0.3
       load-esm: 1.0.3
       mime-types: 2.1.35
-      retry-axios: 2.6.0(axios@1.20.0(debug@4.4.3))
+      retry-axios: 2.6.0(axios@1.20.0)
       tough-cookie: 4.1.4
     transitivePeerDependencies:
       - supports-color
@@ -6233,7 +6244,7 @@ snapshots:
 
   resolve-pkg-maps@1.0.0: {}
 
-  retry-axios@2.6.0(axios@1.20.0(debug@4.4.3)):
+  retry-axios@2.6.0(axios@1.20.0):
     dependencies:
       axios: 1.20.0(debug@4.4.3)
 

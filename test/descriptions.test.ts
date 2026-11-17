@@ -175,6 +175,100 @@ describe('crawlbrulee node properties', () => {
 		}
 	});
 
+	it('offers Color Scheme among the screenshot options, light by default', () => {
+		const opts = find('screenshotOptions')[0].options as INodeProperties[];
+		const scheme = opts.find((o) => o.name === 'colorScheme')!;
+		expect(scheme.displayName).toBe('Color Scheme');
+		expect(scheme.type).toBe('options');
+		expect(scheme.default).toBe('light');
+		expect((scheme.options as INodePropertyOptions[]).map((o) => o.value)).toEqual([
+			'dark',
+			'light',
+		]);
+		expect(scheme.description).toMatch(/No extra credits/);
+	});
+
+	it('offers a PDF switch on scrape and scrape async, with its options shown only when on', () => {
+		const pdf = find('pdf')[0];
+		expect(pdf.displayName).toBe('PDF');
+		expect(pdf.type).toBe('boolean');
+		expect(pdf.default).toBe(false);
+		expect(pdf.displayOptions?.show?.operation).toEqual(['scrape', 'scrapeAsync']);
+		expect(pdf.description).toMatch(/expires 24 hours after the scrape/);
+		expect(pdf.description).toContain('https://crawlbrulee.com/docs/scrape/pdf');
+
+		const options = find('pdfOptions')[0];
+		expect(options.type).toBe('collection');
+		expect(options.displayOptions?.show?.operation).toEqual(['scrape', 'scrapeAsync']);
+		expect(options.displayOptions?.show?.pdf).toEqual([true]);
+		const fields = options.options as INodeProperties[];
+		expect(fields.map((f) => f.name)).toEqual(['landscape', 'layout', 'media', 'paper']);
+		const values = (name: string) =>
+			(fields.find((f) => f.name === name)!.options as INodePropertyOptions[]).map((o) => o.value);
+		expect(values('layout')).toEqual(['pages', 'single_page']);
+		expect(values('paper')).toEqual(['a4', 'letter']);
+		expect(values('media')).toEqual(['print', 'screen']);
+		expect(fields.find((f) => f.name === 'layout')!.default).toBe('pages');
+		expect(fields.find((f) => f.name === 'paper')!.default).toBe('a4');
+		expect(fields.find((f) => f.name === 'media')!.default).toBe('screen');
+		expect(fields.find((f) => f.name === 'landscape')!.default).toBe(false);
+	});
+
+	it('offers Download PDF on Scrape URL (only with PDF on) and on a finished job', () => {
+		const downloads = find('downloadPdf');
+		expect(downloads).toHaveLength(2);
+		const onScrape = downloads.find((p) => p.displayOptions?.show?.operation?.[0] === 'scrape')!;
+		expect(onScrape.displayOptions?.show?.pdf).toEqual([true]);
+		const onJob = downloads.find(
+			(p) => p.displayOptions?.show?.operation?.[0] === 'getScrapeResult',
+		)!;
+		expect(onJob.displayOptions?.show?.pdf).toBeUndefined();
+		for (const d of downloads) {
+			expect(d.type).toBe('boolean');
+			expect(d.default).toBe(false);
+		}
+	});
+
+	it('keeps the released map option names, with Max URLs now labeled Max Results', () => {
+		const map = find('options').find((p) => p.displayOptions?.show?.resource?.[0] === 'map')!;
+		const fields = map.options as INodeProperties[];
+		expect(fields.map((f) => f.name)).toEqual([
+			'cacheMaxAge',
+			'country',
+			'depth',
+			'entries',
+			'external',
+			'internal',
+			'internalSubdomains',
+			'limit',
+			'maxUrls',
+			'modifiedSince',
+			'page',
+			'proxy',
+			'sitemapOnly',
+			'sitemapUrl',
+			'zeroDataRetention',
+		]);
+		const maxUrls = fields.find((f) => f.name === 'maxUrls')!;
+		expect(maxUrls.displayName).toBe('Max Results');
+		expect(maxUrls.default).toBe(5000);
+		const depth = fields.find((f) => f.name === 'depth')!;
+		expect(depth.default).toBe(3);
+		// no maximum here: the api sets it and can raise it without a node release
+		expect(depth.typeOptions).toEqual({ minValue: 0 });
+		const entries = fields.find((f) => f.name === 'entries')!;
+		expect(entries.default).toBe('pages');
+		expect((entries.options as INodePropertyOptions[]).map((o) => o.value)).toEqual([
+			'all',
+			'pages',
+			'sitemaps',
+		]);
+		expect(fields.find((f) => f.name === 'modifiedSince')!.type).toBe('dateTime');
+		expect(fields.find((f) => f.name === 'sitemapUrl')!.description).toContain(
+			'https://crawlbrulee.com/docs/map',
+		);
+	});
+
 	it('has a job id field on both job operations of the scrape resource', () => {
 		expect(find('jobId')[0].displayOptions?.show?.resource).toEqual(['scrape']);
 		expect(find('jobId')[0].displayOptions?.show?.operation?.sort()).toEqual([

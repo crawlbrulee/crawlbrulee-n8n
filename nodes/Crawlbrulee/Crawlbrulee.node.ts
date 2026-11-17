@@ -7,7 +7,7 @@ import type {
 	INodeTypeDescription,
 } from 'n8n-workflow';
 import { NodeApiError, NodeConnectionTypes, NodeOperationError } from 'n8n-workflow';
-import { attachScreenshots } from './binary';
+import { attachPdf, attachScreenshots } from './binary';
 import { buildMapBody, type MapParams } from './builders/map';
 import { buildAsyncScrapeBody, buildScrapeBody, type ScrapeParams } from './builders/scrape';
 import { crawlbruleeProperties } from './descriptions';
@@ -22,7 +22,7 @@ export class Crawlbrulee implements INodeType {
 		version: 1,
 		subtitle: '={{ $parameter["operation"] }}',
 		description:
-			"Scrape any URL to Markdown, HTML, links, images, metadata or a screenshot, and map a site's URLs",
+			"Scrape any URL to Markdown, HTML, links, images, metadata, a screenshot or a PDF, and map a site's URLs",
 		defaults: { name: 'crawlbrulee' },
 		inputs: [NodeConnectionTypes.Main],
 		outputs: [NodeConnectionTypes.Main],
@@ -75,6 +75,8 @@ function scrapeParams(this: IExecuteFunctions, i: number): ScrapeParams {
 			i,
 			{},
 		) as ScrapeParams['screenshotOptions'],
+		pdf: this.getNodeParameter('pdf', i, false) as boolean,
+		pdfOptions: this.getNodeParameter('pdfOptions', i, {}) as ScrapeParams['pdfOptions'],
 		options: this.getNodeParameter('options', i, {}) as ScrapeParams['options'],
 		webhookUrl: this.getNodeParameter('webhookUrl', i, '') as string,
 		webhookMetadata: this.getNodeParameter(
@@ -102,10 +104,13 @@ async function scrapeAndMaybeDownload(
 	i: number,
 	json: IDataObject,
 ): Promise<INodeExecutionData> {
-	const download = this.getNodeParameter('downloadScreenshot', i, false) as boolean;
-	if (!download) return { json };
-	const binary = await attachScreenshots.call(this, json);
-	return binary ? { json, binary } : { json };
+	const downloadScreenshot = this.getNodeParameter('downloadScreenshot', i, false) as boolean;
+	const downloadPdf = this.getNodeParameter('downloadPdf', i, false) as boolean;
+	const binary = {
+		...(downloadScreenshot ? await attachScreenshots.call(this, json) : undefined),
+		...(downloadPdf ? await attachPdf.call(this, json) : undefined),
+	};
+	return Object.keys(binary).length > 0 ? { json, binary } : { json };
 }
 
 async function runOperation(
@@ -166,7 +171,9 @@ async function runOperation(
 				url: this.getNodeParameter('url', i) as string,
 				options: this.getNodeParameter('options', i, {}) as MapParams['options'],
 			};
-			const body = buildMapBody(node, i, params) as unknown as IDataObject;
+			// the workflow's time zone (its setting, else the instance's): n8n means a date and
+			// time with no zone of its own in this zone
+			const body = buildMapBody(node, i, params, this.getTimezone()) as unknown as IDataObject;
 			return {
 				json: await crawlbruleeRequest.call(this, {
 					method: 'POST',

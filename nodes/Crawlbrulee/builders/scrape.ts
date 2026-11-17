@@ -52,8 +52,34 @@ export interface ScrapeCookie {
 	value: string;
 }
 
-export type ScrapeRequestBody = ScrapeRequest;
-export type AsyncScrapeRequestBody = AsyncScrapeRequest;
+/** The PDF options in the UI. */
+export type PdfLayout = 'pages' | 'single_page';
+export type PdfPaper = 'a4' | 'letter';
+export type PdfMedia = 'screen' | 'print';
+export type ColorScheme = 'light' | 'dark';
+
+/** `extract.pdf` as the api takes it. `{}` takes every default. */
+export interface ScrapePdfRequest {
+	layout?: PdfLayout;
+	paper?: PdfPaper;
+	landscape?: boolean;
+	media?: PdfMedia;
+}
+
+/**
+ * The request fields `extract.pdf` and `extract.screenshot.color_scheme`, local until
+ * the sdk ships them. Then remove this and use `ScrapeRequest` /
+ * `AsyncScrapeRequest` / `ScrapeExtract` / `ScreenshotRequest` again.
+ */
+export type ScreenshotRequestBody = ScreenshotRequest & { color_scheme?: ColorScheme };
+export type ScrapeExtractBody = Omit<ScrapeExtract, 'screenshot'> & {
+	screenshot?: ScreenshotRequestBody;
+	pdf?: ScrapePdfRequest;
+};
+export type ScrapeRequestBody = Omit<ScrapeRequest, 'extract'> & { extract?: ScrapeExtractBody };
+export type AsyncScrapeRequestBody = Omit<AsyncScrapeRequest, 'extract'> & {
+	extract?: ScrapeExtractBody;
+};
 
 export interface ScreenshotAction {
 	type: 'wait' | 'scroll';
@@ -72,6 +98,14 @@ export interface ScrapeParams {
 		deviceMode?: 'desktop' | 'mobile';
 		actionsBefore?: { action?: ScreenshotAction[] };
 		sliceHeight?: number;
+		colorScheme?: ColorScheme;
+	};
+	pdf?: boolean;
+	pdfOptions?: {
+		layout?: PdfLayout;
+		paper?: PdfPaper;
+		landscape?: boolean;
+		media?: PdfMedia;
 	};
 	options: {
 		proxy?: ProxyChoice;
@@ -106,10 +140,10 @@ function buildScreenshot(
 	node: INode,
 	itemIndex: number,
 	p: ScrapeParams,
-): ScreenshotRequest | undefined {
+): ScreenshotRequestBody | undefined {
 	if (p.screenshotType === 'none') return undefined;
 	const o = p.screenshotOptions ?? {};
-	const shot: ScreenshotRequest = { type: p.screenshotType };
+	const shot: ScreenshotRequestBody = { type: p.screenshotType };
 
 	const hasWidth = isSet(o.width);
 	const hasHeight = isSet(o.height);
@@ -127,6 +161,7 @@ function buildScreenshot(
 		});
 	}
 	if (o.deviceMode === 'desktop' || o.deviceMode === 'mobile') shot.device_mode = o.deviceMode;
+	if (o.colorScheme === 'light' || o.colorScheme === 'dark') shot.color_scheme = o.colorScheme;
 
 	const actions = o.actionsBefore?.action ?? [];
 	if (actions.length > 5) {
@@ -146,6 +181,30 @@ function buildScreenshot(
 		shot.actions_after = [{ type: 'slice', height }];
 	}
 	return shot;
+}
+
+/** `extract.pdf` from the PDF switch and its options. Undefined when the switch is off. */
+export function buildPdf(
+	node: INode,
+	itemIndex: number,
+	p: ScrapeParams,
+): ScrapePdfRequest | undefined {
+	if (p.pdf !== true) return undefined;
+	const o = p.pdfOptions ?? {};
+	const pdf: ScrapePdfRequest = {};
+	if (o.layout === 'pages' || o.layout === 'single_page') pdf.layout = o.layout;
+	if (o.paper === 'a4' || o.paper === 'letter') pdf.paper = o.paper;
+	// false is the api default, so only a sideways sheet is sent
+	if (o.landscape === true) pdf.landscape = true;
+	if (o.media === 'screen' || o.media === 'print') pdf.media = o.media;
+	// the api refuses paper or landscape with single_page, even with a default value
+	if (pdf.layout === 'single_page' && (pdf.paper !== undefined || pdf.landscape === true)) {
+		throw new NodeOperationError(node, 'Paper and Landscape work only with the Pages layout', {
+			itemIndex,
+			description: 'Remove them from PDF Options, or set Layout to Pages.',
+		});
+	}
+	return pdf;
 }
 
 /**
@@ -329,21 +388,23 @@ export function buildScrapeBody(
 ): ScrapeRequestBody {
 	const chosen = new Set(p.extract ?? []);
 	const elements = buildElements(node, itemIndex, p);
-	if (chosen.size === 0 && !elements && p.screenshotType === 'none') {
+	if (chosen.size === 0 && !elements && p.screenshotType === 'none' && p.pdf !== true) {
 		throw new NodeOperationError(
 			node,
-			'Pick at least one Extract output, an Element or a Screenshot',
+			'Pick at least one Extract output, an Element, a Screenshot or a PDF',
 			{
 				itemIndex,
 				description: 'The request would ask for nothing.',
 			},
 		);
 	}
-	const extract: ScrapeExtract = {};
+	const extract: ScrapeExtractBody = {};
 	for (const key of EXTRACT_KEYS) extract[key] = chosen.has(key);
 	if (elements) extract.elements = elements;
 	const screenshot = buildScreenshot(node, itemIndex, p);
 	if (screenshot) extract.screenshot = screenshot;
+	const pdf = buildPdf(node, itemIndex, p);
+	if (pdf) extract.pdf = pdf;
 
 	const body: ScrapeRequestBody = { url: p.url, extract };
 	const o = p.options ?? {};

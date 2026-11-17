@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from 'vitest';
-import { attachScreenshots } from '../nodes/Crawlbrulee/binary';
+import { attachPdf, attachScreenshots } from '../nodes/Crawlbrulee/binary';
 
 function ctx() {
 	const httpRequest = vi.fn().mockResolvedValue(new ArrayBuffer(4));
@@ -27,7 +27,7 @@ describe('attachScreenshots', () => {
 		const { self, httpRequest, prepareBinaryData } = ctx();
 		const json = {
 			screenshot: {
-				url: 'https://cdn/full.png',
+				url: 'https://cdn.example.com/full.png',
 				type: 'full_page',
 				properties: {
 					file_name: 'full.png',
@@ -39,7 +39,7 @@ describe('attachScreenshots', () => {
 				slices: [
 					{
 						row_nr: 0,
-						url: 'https://cdn/s0.png',
+						url: 'https://cdn.example.com/s0.png',
 						type: 'slice',
 						properties: {
 							file_name: 's0.png',
@@ -51,7 +51,7 @@ describe('attachScreenshots', () => {
 					},
 					{
 						row_nr: 1,
-						url: 'https://cdn/s1.png',
+						url: 'https://cdn.example.com/s1.png',
 						type: 'slice',
 						properties: {
 							file_name: 's1.png',
@@ -71,7 +71,7 @@ describe('attachScreenshots', () => {
 			'screenshot_slice_1',
 		]);
 		expect(httpRequest).toHaveBeenCalledWith({
-			url: 'https://cdn/full.png',
+			url: 'https://cdn.example.com/full.png',
 			method: 'GET',
 			encoding: 'arraybuffer',
 		});
@@ -84,7 +84,7 @@ describe('attachScreenshots', () => {
 		const json = {
 			markdown: '# hi',
 			screenshot: {
-				url: 'https://cdn/full.png',
+				url: 'https://cdn.example.com/full.png',
 				type: 'full_page',
 				properties: {
 					file_name: 'full.png',
@@ -96,7 +96,7 @@ describe('attachScreenshots', () => {
 				slices: [
 					{
 						row_nr: 0,
-						url: 'https://cdn/s0.png',
+						url: 'https://cdn.example.com/s0.png',
 						type: 'slice',
 						properties: {
 							file_name: 's0.png',
@@ -115,5 +115,55 @@ describe('attachScreenshots', () => {
 			'screenshot: 403 Forbidden',
 		);
 		expect(Object.keys(binary!)).toEqual(['screenshot_slice_0']);
+	});
+});
+
+describe('attachPdf', () => {
+	it('returns undefined when there is no pdf', async () => {
+		const { self, httpRequest } = ctx();
+		expect(await attachPdf.call(self, { url: 'https://example.com/' })).toBeUndefined();
+		expect(httpRequest).not.toHaveBeenCalled();
+	});
+
+	it('downloads the PDF under the pdf key, named after the page host', async () => {
+		const { self, httpRequest, prepareBinaryData } = ctx();
+		const json = {
+			url: 'https://example.com/report',
+			pdf: { url: 'https://cdn.example.com/page.pdf', bytes: 4 },
+		};
+		const binary = await attachPdf.call(self, json);
+		expect(Object.keys(binary!)).toEqual(['pdf']);
+		expect(httpRequest).toHaveBeenCalledWith({
+			url: 'https://cdn.example.com/page.pdf',
+			method: 'GET',
+			encoding: 'arraybuffer',
+		});
+		expect(prepareBinaryData).toHaveBeenCalledWith(
+			expect.any(Buffer),
+			'example.com.pdf',
+			'application/pdf',
+		);
+	});
+
+	it('falls back to page.pdf when the page url cannot be read', async () => {
+		const { self, prepareBinaryData } = ctx();
+		await attachPdf.call(self, { pdf: { url: 'https://cdn.example.com/page.pdf', bytes: 4 } });
+		expect(prepareBinaryData).toHaveBeenCalledWith(
+			expect.any(Buffer),
+			'page.pdf',
+			'application/pdf',
+		);
+	});
+
+	it('keeps the item and reports the failure when the download rejects', async () => {
+		const { self, httpRequest } = ctx();
+		httpRequest.mockRejectedValueOnce(new Error('403 Forbidden'));
+		const json: Record<string, unknown> = {
+			markdown: '# hi',
+			pdf: { url: 'https://cdn.example.com/page.pdf', bytes: 4 },
+		};
+		expect(await attachPdf.call(self, json as never)).toBeUndefined();
+		expect(json.markdown).toBe('# hi');
+		expect(json.pdf_download_error).toBe('pdf: 403 Forbidden');
 	});
 });

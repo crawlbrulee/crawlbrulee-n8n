@@ -16,7 +16,7 @@ export const proxyOption: INodeProperties = {
 			description:
 				'Tries Basic first and moves to Advanced on failure. You are billed at the tier that delivered.',
 		},
-		{ name: 'Basic', value: 'basic', description: 'Datacenter proxy tier, lowest cost' },
+		{ name: 'Basic', value: 'basic', description: 'Basic proxy tier, lowest cost' },
 	],
 	default: 'auto',
 	description: 'Proxy tier used to fetch the page',

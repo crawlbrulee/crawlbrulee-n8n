@@ -5,7 +5,7 @@
 
 **EU-native web scraping for AI agents & developers.**
 
-put crawlbrulee in your n8n workflows. this community node package turns any url into clean markdown, html, links, images, metadata or a screenshot, maps a site's urls, and starts a workflow when a background scrape finishes. it also works as an [AI Agent](https://docs.n8n.io/advanced-ai/) tool, so an agent in n8n can scrape a page on its own.
+put crawlbrulee in your n8n workflows. this community node package turns any url into clean markdown, html, links, images, metadata, a screenshot or a pdf, maps a site's urls, and starts a workflow when a background scrape finishes. it also works as an [AI Agent](https://docs.n8n.io/advanced-ai/) tool, so an agent in n8n can scrape a page on its own.
 
 - **everything runs in the EU.** the fetch, the render, the cache and your result never leave EU servers. the proxy exit is the one hop you choose: pick an EU exit and nothing leaves at all. gdpr-aligned, with a data processing agreement.
 - **output made for models.** markdown with ads, popups and cookie banners removed and the links kept, ready for the prompt. full-page screenshots can come back as tiles sized for an image model.
@@ -48,7 +48,7 @@ pick a resource, then an operation:
 | Scrape | Scrape URL (Async) | start a background job, get back its job id |
 | Scrape | Get Scrape Status | pending, running, done or failed |
 | Scrape | Get Scrape Result | the content of a finished job, for 24 hours after it was submitted |
-| Map | Map Website | a site's urls, from its sitemap and its homepage links |
+| Map | Map Website | a site's urls or sitemap files, from its sitemaps and its home page links |
 | Account | Get Credit Usage | credits used and left this billing cycle, plus your concurrency limit |
 | Account | Get Account Info | the organization and token behind the api key |
 
@@ -57,8 +57,8 @@ pick a resource, then an operation:
 every field has a hint in n8n. three things the hints don't tell you:
 
 - **Extract** gives you exactly what you tick: the node sends every output you left unticked as an explicit "no", so the api's own defaults never add one.
-- a **Screenshot** renders the page in a real browser and is billed at the screenshot rate, the priciest one — leave it on None when you don't need the image.
-- **Scrape URL (Async)** takes the same fields as **Scrape URL**, minus **Download Screenshot** (a submit gives you a job id, not an image), plus **Webhook URL** and **Webhook Metadata**.
+- a **Screenshot** renders the page in a real browser and is billed at the screenshot rate, the priciest one, so leave it on None when you don't need the image. a **PDF** costs the same, and a pdf and a screenshot in one request are billed once.
+- **Scrape URL (Async)** takes the same fields as **Scrape URL**, minus **Download Screenshot** and **Download PDF** (a submit gives you a job id, not a file), plus **Webhook URL** and **Webhook Metadata**.
 
 ### elements
 
@@ -95,9 +95,48 @@ with a **heading** row (`h1`, Text), the item's json gets this (the page has 20 
 
 a name with no match is `null` (`[]` with All Matches). selector rules and limits: see [targeted extraction](https://crawlbrulee.com/docs/scrape/targeted-extraction).
 
-### screenshots as files
+### dark mode
+
+set **Color Scheme** to Dark under **Screenshot Options** and the site is asked for its dark theme, so the screenshot shows it. a site without a dark theme, or whose dark theme is only a switch on the page, looks the same as with Light. it costs no extra credits. when the same request also asks for a **PDF**, the pdf shows the dark theme too. a pdf on its own is made with the light theme: the pdf has no color setting of its own.
+
+### pdfs
+
+turn on **PDF** on **Scrape URL** or **Scrape URL (Async)** to save the page as a pdf: a real document with selectable text and working links, backgrounds printed, and no header or footer added. it renders the page in a browser and costs what a screenshot costs; a pdf and a screenshot in one request are billed once. **Extract** starts on Markdown and Metadata, so clear it to get only the pdf.
+
+**PDF Options** sets how it looks. leave it empty for the defaults:
+
+- **Layout**: **Pages** (the default) puts the page on sheets of paper, laid out as in the browser window and shrunk to fit the paper width. **Single Page** makes one page as wide as the browser window and as tall as the web page, up to 15,000 px; a taller page goes on over more pages, and the item carries the `pdf_single_page_overflow` warning.
+- **Paper**: A4 (the default) or Letter. **Landscape** turns the paper sideways. both work only with Pages, and the node stops with an error if you set them with Single Page.
+- **Media**: **Screen** (the default) is the page as it looks on screen. **Print** uses the site's own print style, which on many sites hides menus and images.
+
+the item gets `pdf` with a `url` and its size in `bytes`. the url is a signed link that expires 24 hours after the scrape (for **Scrape URL (Async)**, 24 hours after the job was submitted), so turn on **Download PDF** to keep the file (see below). when the pdf can't be made (for example the page is over 50 MB as a pdf, or it takes too long), the rest of the scrape still comes back, with the `pdf_unavailable` warning and no `pdf`, and it costs what it would have cost without the pdf. a request that asks only for a pdf of content that can't be made into one, such as a json file, stops with an error and costs no credits. a **Scrape URL (Async)** job that asks only for a screenshot, a pdf or both and gets none ends as `failed` and costs no credits: **Get Scrape Status** says failed, and **Get Scrape Result** stops with an error, `unsupported_pdf_output` or `unsupported_screenshot_output` for content that can't be captured and `job_failed` otherwise. a cached copy answers only when it has a pdf made with the same settings; set **Cache Max Age** to 0 under **Options** to always make a new one. layouts and limits: see [pdf](https://crawlbrulee.com/docs/scrape/pdf).
+
+### screenshots and pdfs as files
 
 turn on **Download Screenshot** — it's on **Scrape URL** and on **Get Scrape Result** — and the node attaches the image as binary data under `screenshot`, plus one key per tile (`screenshot_slice_0`, `screenshot_slice_1`, …) when you set Slice Height. the urls stay in the json too, but they are signed links that expire 24 hours after the scrape (for **Scrape URL (Async)**, 24 hours after the job was submitted), so turn this on when you need the image later in the workflow. a download can fail, since a signed url can expire; the item still comes through with its page content and the reason lands on the json as `screenshot_download_error`.
+
+**Download PDF** works the same way, on **Scrape URL** (when **PDF** is on) and on **Get Scrape Result**: the file lands as binary data under `pdf`, named after the page's host (`example.com.pdf`), and a failed download leaves the reason on `pdf_download_error`.
+
+### map a site
+
+**Map Website** with only a url reads the site's top sitemap files and 2 levels of nested ones, adds the links on its home page, and returns pages. every link carries `url`, `type` (`page`, or `sitemap` for a sitemap file) and `lastmod` (the date from the sitemap, as a UTC date and time, or `null` when the sitemap gives none; always `null` for a link found on the home page). under **Options**:
+
+- **Max Results**: the most entries the map finds, counting only the kind set in **Entries**. 5000 by default, up to 100000. discovery stops as soon as this many are found, so a smaller value is a faster map.
+- **Entries**: Pages (the default), Sitemaps (sitemap files) or All (both).
+- **Sitemap URL**: start from this sitemap file instead of the site's top ones. it must be on the same site, or on a host the site's robots.txt names, such as a CDN.
+- **Depth**: how many levels of nested sitemaps to follow: 0 to 3, 3 by default. see [how a map reads sitemaps](https://crawlbrulee.com/docs/map/sitemaps#how-a-map-reads-sitemaps).
+- **Modified Since**: only entries whose `lastmod` is at or after this date and time. an entry with no `lastmod` is left out, and a map with this set is always fresh, so **Cache Max Age** does nothing. see [find what changed since a date](https://crawlbrulee.com/docs/map/sitemaps#find-what-changed-since-a-date). a time with no time zone is read in the workflow's time zone (its setting, else the instance's).
+- **Sitemap Only**: leave out the links found on the home page. a map with **Sitemap URL** or **Modified Since** never adds them.
+
+the site root is listed only when a sitemap lists it. when the site answers 429 (too many requests) on the Sitemap URL file, on its robots.txt or on one of its top sitemap files, the map stops with that rate limit error and costs no credits.
+
+### map a big site in several calls
+
+a very large or deep site is mapped in several calls: list its sitemap files with **Depth** 0 and **Entries** on Sitemaps, then put each file in **Sitemap URL** in a next call. `response_meta.truncation.unread_sitemaps` names the files a call did not read whole, to read next. the full walk-through is in [map a very large or deep site in several calls](https://crawlbrulee.com/docs/map/sitemaps#map-a-very-large-or-deep-site-in-several-calls).
+
+for example: **Map Website** with **Depth** 0 and **Entries** on Sitemaps, then **Split Out** on `links`, then **Loop Over Items**, then **Map Website** with **Sitemap URL** set to `{{ $json.url }}`.
+
+**Max Results** was called Max URLs up to 1.1.0. a saved workflow keeps its value, which now goes to the api as `max_results` instead of the old `max_urls`. the api still returns `total_before_max_urls`, the old name of `total_before_max_results`, with the same value. both old names are removed from the api on 2027-02-01; read `total_before_max_results`.
 
 ### what comes back
 
@@ -134,7 +173,7 @@ scrape, map and finished-job responses carry `response_meta.usage`, so the cost 
 | field | what it is |
 |---|---|
 | `total_credit_cost` | credits this call cost |
-| `engine_credit_cost` | the engine's base price: 1 for `http`, 3 for `browser`, 5 for `screenshot`, 0 for `cache` |
+| `engine_credit_cost` | the engine's base price: 1 for `http`, 3 for `browser`, 5 for `screenshot` (a screenshot or a pdf), 0 for `cache` |
 | `proxy_multiplier` | 1 for the Basic proxy tier, 5 for Advanced |
 | `screenshot_slicing_credit_cost` | 1 when the screenshot was cut into slices on this call, else 0 (reusing slices from the cache costs 0). not on **Map Website** |
 | `zero_data_retention_credit_cost` | 1 when **Zero Data Retention** added its credit to this call, else 0 |
@@ -150,7 +189,7 @@ use it to react to a background scrape instead of polling for it:
 2. paste that url into the **Webhook URL** field of a **Scrape URL (Async)** operation.
 3. when the job finishes, we post one `scrape.complete` event there and the trigger fires.
 
-the item carries the event id, the timestamp and the job data. a job that got a page has status `success` and the page's HTTP status in `page_status_code`, so a 404 page arrives as `success` too. turn on **Fetch Result** and, for a job that succeeded, the trigger fetches the page content into `result`; if that fetch fails, the reason lands in `result_error` and the item still comes through.
+the item carries the event id, the timestamp and the job data. a job that got a page has status `success` and the page's HTTP status in `page_status_code`, so a 404 page arrives as `success` too. a job that asked only for a screenshot or a pdf and got none arrives as `failed`. turn on **Fetch Result** and, for a job that succeeded, the trigger fetches the page content into `result`; if that fetch fails, the reason lands in `result_error` and the item still comes through.
 
 with the secret set, the trigger checks the HMAC-SHA256 signature on every delivery. it drops one that fails the check, one that isn't a `scrape.complete` event, and one whose event id is among the last 500 it saw: nothing runs, and we still answer 200 so it is not retried. that id list lives in the node's workflow data, so a fresh copy of the workflow starts empty.
 

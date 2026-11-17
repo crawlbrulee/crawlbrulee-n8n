@@ -159,7 +159,7 @@ describe('buildScrapeBody', () => {
 
 	it('rejects a request that asks for nothing', () => {
 		expect(() => buildScrapeBody(node, 2, base({ extract: [], screenshotType: 'none' }))).toThrow(
-			/Pick at least one Extract output, an Element or a Screenshot/,
+			/Pick at least one Extract output, an Element, a Screenshot or a PDF/,
 		);
 		expect(() =>
 			buildScrapeBody(
@@ -506,6 +506,104 @@ describe('headers and cookies', () => {
 		expect(body.headers).toEqual({ 'X-Key': 'k' });
 		expect(body.cookies).toEqual([{ name: 'sid', value: 'v' }]);
 		expect(body.webhook).toEqual({ url: 'https://hook' });
+	});
+});
+
+describe('pdf and color scheme', () => {
+	it('sends no pdf key when PDF is off', () => {
+		expect(buildScrapeBody(node, 0, base()).extract).not.toHaveProperty('pdf');
+		expect(
+			buildScrapeBody(node, 0, base({ pdf: false, pdfOptions: { layout: 'single_page' } })).extract,
+		).not.toHaveProperty('pdf');
+	});
+
+	it('sends pdf: {} when PDF is on with no options, so every api default applies', () => {
+		expect(buildScrapeBody(node, 0, base({ pdf: true })).extract?.pdf).toEqual({});
+	});
+
+	it('maps every PDF option, and sends landscape only when on', () => {
+		expect(
+			buildScrapeBody(
+				node,
+				0,
+				base({
+					pdf: true,
+					pdfOptions: { layout: 'pages', paper: 'letter', landscape: true, media: 'print' },
+				}),
+			).extract?.pdf,
+		).toEqual({ layout: 'pages', paper: 'letter', landscape: true, media: 'print' });
+		expect(
+			buildScrapeBody(node, 0, base({ pdf: true, pdfOptions: { landscape: false } })).extract?.pdf,
+		).toEqual({});
+	});
+
+	it('sends a single_page PDF with its media', () => {
+		expect(
+			buildScrapeBody(
+				node,
+				0,
+				base({ pdf: true, pdfOptions: { layout: 'single_page', media: 'screen' } }),
+			).extract?.pdf,
+		).toEqual({ layout: 'single_page', media: 'screen' });
+	});
+
+	it('rejects Paper or Landscape with the Single Page layout, as the api does', () => {
+		for (const extra of [{ paper: 'a4' as const }, { landscape: true }]) {
+			expect(() =>
+				buildScrapeBody(
+					node,
+					1,
+					base({ pdf: true, pdfOptions: { layout: 'single_page', ...extra } }),
+				),
+			).toThrow(/Paper and Landscape work only with the Pages layout/);
+		}
+	});
+
+	it('takes a PDF alone as a request, with Extract cleared', () => {
+		const body = buildScrapeBody(node, 0, base({ extract: [], pdf: true }));
+		expect(body.extract).toEqual({
+			markdown: false,
+			cleaned_html: false,
+			raw_html: false,
+			links: false,
+			images: false,
+			metadata: false,
+			pdf: {},
+		});
+	});
+
+	it('sends pdf on an async scrape too', () => {
+		expect(
+			buildAsyncScrapeBody(node, 0, base({ pdf: true, pdfOptions: { media: 'print' } })).extract
+				?.pdf,
+		).toEqual({ media: 'print' });
+	});
+
+	it('sends the color scheme inside the screenshot block', () => {
+		expect(
+			buildScrapeBody(
+				node,
+				0,
+				base({ screenshotType: 'viewport', screenshotOptions: { colorScheme: 'dark' } }),
+			).extract?.screenshot,
+		).toEqual({ type: 'viewport', color_scheme: 'dark' });
+		expect(
+			buildScrapeBody(
+				node,
+				0,
+				base({ screenshotType: 'full_page', screenshotOptions: { colorScheme: 'light' } }),
+			).extract?.screenshot,
+		).toEqual({ type: 'full_page', color_scheme: 'light' });
+	});
+
+	it('sends no color scheme when no screenshot is asked for', () => {
+		const body = buildScrapeBody(
+			node,
+			0,
+			base({ screenshotType: 'none', screenshotOptions: { colorScheme: 'dark' }, pdf: true }),
+		);
+		expect(body.extract).not.toHaveProperty('screenshot');
+		expect(body.extract?.pdf).toEqual({});
 	});
 });
 

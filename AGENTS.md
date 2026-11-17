@@ -19,7 +19,10 @@ credential. Programmatic node style, TypeScript, pnpm, vitest.
 `dependencies` in `package.json` must stay empty. `@crawlbrulee/sdk` is a **dev**
 dependency and every import from it must be `import type`, so nothing of it reaches
 `dist`. For the same reason the webhook signature check runs on the Web Crypto global
-(`crypto.subtle`), never on `node:crypto`.
+(`crypto.subtle`), never on `node:crypto`. The node may import a package the n8n instance
+already provides, and only one that `pnpm lint` allows. It imports `luxon` that way for time
+zones: `luxon` and `@types/luxon` are dev dependencies for the build and the tests, the
+version matches the one `n8n-workflow` uses, and `dist` loads it by name from the instance.
 
 **License is MIT**, not the Apache-2.0 the other client tools use. n8n's verification
 requires MIT. This repo is the one exception; don't "fix" it to match the others.

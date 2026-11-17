@@ -51,6 +51,10 @@ const cookieFields: INodeProperties[] = [
 const resourceShow = { resource: ['scrape'] };
 const urlShow = { resource: ['scrape'], operation: ['scrape', 'scrapeAsync'] };
 const screenshotShow = { ...urlShow, screenshotType: ['full_page', 'viewport'] };
+const pdfShow = { ...urlShow, pdf: [true] };
+
+const PDF_DOCS =
+	'Layouts and limits: <a href="https://crawlbrulee.com/docs/scrape/pdf">PDF docs</a>';
 const jobShow = { resource: ['scrape'], operation: ['getScrapeStatus', 'getScrapeResult'] };
 
 export const scrapeOperations: INodeProperties = {
@@ -274,6 +278,23 @@ export const scrapeFields: INodeProperties[] = [
 				],
 			},
 			{
+				displayName: 'Color Scheme',
+				name: 'colorScheme',
+				type: 'options',
+				options: [
+					{
+						name: 'Dark',
+						value: 'dark',
+						description:
+							'Ask the site for its dark theme. A site without one looks the same as with Light.',
+					},
+					{ name: 'Light', value: 'light', description: "The site's light theme" },
+				],
+				default: 'light',
+				description:
+					'Light or dark. Dark asks the site for its dark theme, if it has one; a PDF in the same request shows it too. No extra credits.',
+			},
+			{
 				displayName: 'Device Mode',
 				name: 'deviceMode',
 				type: 'options',
@@ -335,6 +356,90 @@ export const scrapeFields: INodeProperties[] = [
 				screenshotType: ['full_page', 'viewport'],
 			},
 		},
+	},
+	{
+		displayName: 'PDF',
+		name: 'pdf',
+		type: 'boolean',
+		default: false,
+		description: `Whether to save the page as a PDF, with selectable text and working links. Uses a headless browser and costs what a screenshot costs; a PDF and a screenshot in one request are billed once. The item gets pdf, with a signed link that expires 24 hours after the scrape. ${PDF_DOCS}.`,
+		displayOptions: { show: urlShow },
+	},
+	{
+		displayName: 'PDF Options',
+		name: 'pdfOptions',
+		type: 'collection',
+		placeholder: 'Add Option',
+		default: {},
+		displayOptions: { show: pdfShow },
+		options: [
+			{
+				displayName: 'Landscape',
+				name: 'landscape',
+				type: 'boolean',
+				default: false,
+				description: 'Whether to turn the paper sideways. Only with the Pages layout.',
+			},
+			{
+				displayName: 'Layout',
+				name: 'layout',
+				type: 'options',
+				options: [
+					{
+						name: 'Pages',
+						value: 'pages',
+						description:
+							'The page on sheets of paper, laid out as in the browser window and shrunk to fit the paper width',
+					},
+					{
+						name: 'Single Page',
+						value: 'single_page',
+						description:
+							'One page as wide as the browser window and as tall as the web page, up to 15,000 px. A taller page goes on over more pages.',
+					},
+				],
+				default: 'pages',
+				description: 'How the page is laid out in the PDF',
+			},
+			{
+				displayName: 'Media',
+				name: 'media',
+				type: 'options',
+				options: [
+					{
+						name: 'Print',
+						value: 'print',
+						description:
+							"The site's own print style, which on many sites hides menus and images. A site without one looks as on screen.",
+					},
+					{ name: 'Screen', value: 'screen', description: 'The page as it looks on screen' },
+				],
+				default: 'screen',
+				description: 'Which style of the site the PDF uses',
+			},
+			{
+				displayName: 'Paper',
+				name: 'paper',
+				type: 'options',
+				options: [
+					{ name: 'A4', value: 'a4' },
+					{ name: 'Letter', value: 'letter' },
+				],
+				default: 'a4',
+				description: 'Paper size. Only with the Pages layout.',
+			},
+		],
+	},
+	{
+		displayName: 'Download PDF',
+		name: 'downloadPdf',
+		type: 'boolean',
+		default: false,
+		description:
+			'Whether to download the PDF into binary data on the item. PDF links are signed and expire 24 hours after the scrape.',
+		// like Download Screenshot: an async submit returns a job id, so Get Scrape Result
+		// carries its own Download PDF field further down
+		displayOptions: { show: { resource: ['scrape'], operation: ['scrape'], pdf: [true] } },
 	},
 	{
 		displayName: 'Options',
@@ -443,6 +548,15 @@ export const scrapeFields: INodeProperties[] = [
 		default: false,
 		description:
 			'Whether to download the screenshot (and its slices) into binary data when the result has one. Screenshot links expire 24 hours after the job was submitted.',
+		displayOptions: { show: { resource: ['scrape'], operation: ['getScrapeResult'] } },
+	},
+	{
+		displayName: 'Download PDF',
+		name: 'downloadPdf',
+		type: 'boolean',
+		default: false,
+		description:
+			'Whether to download the PDF into binary data when the result has one. PDF links expire 24 hours after the job was submitted.',
 		displayOptions: { show: { resource: ['scrape'], operation: ['getScrapeResult'] } },
 	},
 ];

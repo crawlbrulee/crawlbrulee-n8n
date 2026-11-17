@@ -27,6 +27,7 @@ function ctx(
 			webhookSecret: '',
 		}),
 		continueOnFail: () => continueOnFail,
+		getTimezone: () => 'Europe/Bucharest',
 		helpers: {
 			httpRequestWithAuthentication,
 			httpRequest: vi.fn().mockResolvedValue(new ArrayBuffer(2)),
@@ -318,7 +319,7 @@ describe('Crawlbrulee node', () => {
 				statusCode: 200,
 				body: {
 					screenshot: {
-						url: 'https://cdn/a.png',
+						url: 'https://cdn.example.com/a.png',
 						type: 'viewport',
 						properties: {
 							file_name: 'a.png',
@@ -342,7 +343,7 @@ describe('Crawlbrulee node', () => {
 				statusCode: 200,
 				body: {
 					screenshot: {
-						url: 'https://cdn/b.png',
+						url: 'https://cdn.example.com/b.png',
 						type: 'viewport',
 						properties: {
 							file_name: 'b.png',
@@ -357,6 +358,166 @@ describe('Crawlbrulee node', () => {
 		);
 		const [out] = await node.execute.call(self);
 		expect(out[0].binary).toHaveProperty('screenshot');
+	});
+
+	it('passes the pdf, the new warnings and the map link fields through unchanged', async () => {
+		const scrape = {
+			url: 'https://example.com/',
+			pdf: { url: 'https://cdn.example.com/page.pdf', bytes: 48213 },
+			warnings: ['pdf_single_page_overflow'],
+			response_meta: { usage: { total_credit_cost: 5, engine: 'screenshot' } },
+		};
+		const scrapeParams = {
+			resource: 'scrape',
+			operation: 'scrape',
+			url: 'https://example.com',
+			extract: [],
+			screenshotType: 'none',
+			screenshotOptions: {},
+			pdf: true,
+			pdfOptions: { layout: 'single_page' },
+			options: {},
+		};
+		const sync = ctx(scrapeParams, { statusCode: 200, body: scrape });
+		const [scraped] = await node.execute.call(sync.self);
+		expect(scraped[0].json).toEqual(scrape);
+		expect(scraped[0].binary).toBeUndefined();
+		const sent = sync.httpRequestWithAuthentication.mock.calls[0][1].body;
+		expect(sent.extract.pdf).toEqual({ layout: 'single_page' });
+
+		const map = {
+			links: [
+				{ url: 'https://example.com/sitemap-2.xml', type: 'sitemap', lastmod: null },
+				{ url: 'https://example.com/a', type: 'page', lastmod: '2026-11-01T00:00:00.000Z' },
+			],
+			response_meta: {
+				truncation: {
+					total_before_max_results: 2,
+					discovery_cap_reason: 'depth',
+					unread_sitemaps: ['https://example.com/sitemap-3.xml'],
+				},
+			},
+		};
+		const mapped = ctx(
+			{
+				resource: 'map',
+				operation: 'map',
+				url: 'https://example.com',
+				options: { depth: 1, entries: 'all', maxUrls: 10 },
+			},
+			{ statusCode: 200, body: map },
+		);
+		const [out] = await node.execute.call(mapped.self);
+		expect(out[0].json).toEqual(map);
+		expect(mapped.httpRequestWithAuthentication.mock.calls[0][1].body).toEqual({
+			url: 'https://example.com',
+			depth: 1,
+			entries: 'all',
+			max_results: 10,
+		});
+	});
+
+	it("reads Map Website's Modified Since in the workflow's time zone", async () => {
+		// ctx() gives the workflow the zone Europe/Bucharest, UTC+2 in November
+		const mapped = ctx(
+			{
+				resource: 'map',
+				operation: 'map',
+				url: 'https://example.com',
+				options: { modifiedSince: '2026-11-01T00:00:00' },
+			},
+			{ statusCode: 200, body: { links: [] } },
+		);
+		await node.execute.call(mapped.self);
+		expect(mapped.httpRequestWithAuthentication.mock.calls[0][1].body).toEqual({
+			url: 'https://example.com',
+			modified_since: '2026-10-31T22:00:00.000Z',
+		});
+	});
+
+	it('attaches the PDF as binary when Download PDF is on, on Scrape URL and on a job result', async () => {
+		const body = {
+			url: 'https://example.com/',
+			pdf: { url: 'https://cdn.example.com/page.pdf', bytes: 2 },
+		};
+		const cases: Params[] = [
+			{
+				resource: 'scrape',
+				operation: 'scrape',
+				url: 'https://example.com',
+				extract: [],
+				screenshotType: 'none',
+				screenshotOptions: {},
+				pdf: true,
+				downloadPdf: true,
+				options: {},
+			},
+			{ resource: 'scrape', operation: 'getScrapeResult', jobId: 'j', downloadPdf: true },
+		];
+		for (const params of cases) {
+			const [out] = await node.execute.call(ctx(params, { statusCode: 200, body }).self);
+			expect(Object.keys(out[0].binary!)).toEqual(['pdf']);
+		}
+	});
+
+	it('attaches both the screenshot and the PDF when both downloads are on', async () => {
+		const { self } = ctx(
+			{
+				resource: 'scrape',
+				operation: 'scrape',
+				url: 'https://example.com',
+				extract: [],
+				screenshotType: 'viewport',
+				screenshotOptions: {},
+				downloadScreenshot: true,
+				pdf: true,
+				downloadPdf: true,
+				options: {},
+			},
+			{
+				statusCode: 200,
+				body: {
+					url: 'https://example.com/',
+					screenshot: {
+						url: 'https://cdn.example.com/a.png',
+						type: 'viewport',
+						properties: {
+							file_name: 'a.png',
+							mime: 'image/png',
+							width: 1,
+							height: 1,
+							viewport: { width: 1, height: 1, device_scale_factor: 1 },
+						},
+					},
+					pdf: { url: 'https://cdn.example.com/page.pdf', bytes: 2 },
+				},
+			},
+		);
+		const [out] = await node.execute.call(self);
+		expect(Object.keys(out[0].binary!).sort()).toEqual(['pdf', 'screenshot']);
+	});
+
+	it('shows the api message for unsupported_pdf_output', async () => {
+		const params = {
+			resource: 'scrape',
+			operation: 'scrape',
+			url: 'https://example.com/data.json',
+			extract: [],
+			screenshotType: 'none',
+			screenshotOptions: {},
+			pdf: true,
+			options: {},
+		};
+		const bad = {
+			statusCode: 422,
+			body: {
+				name: 'unsupported_pdf_output',
+				message: 'A PDF cannot be made from this content type.',
+			},
+		};
+		await expect(node.execute.call(ctx(params, bad).self)).rejects.toThrow(
+			/A PDF cannot be made from this content type/,
+		);
 	});
 
 	it('runs every input item and pairs each failure with its own index', async () => {
