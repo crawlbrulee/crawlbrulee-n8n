@@ -4,10 +4,11 @@ all notable changes to `n8n-nodes-crawlbrulee` are documented here.
 
 this project follows [Semantic Versioning](https://semver.org).
 
-## unreleased
+## 1.3.0 (2026-11-20)
 
 ### changed
 
+- the User-Agent header carries `n8n-nodes-crawlbrulee/1.3.0`, and the types come from `@crawlbrulee/sdk` 1.6.0.
 - **Proxy and Require JS help text.** Auto, the default, starts light and steps up on its own when a site needs more: a stronger proxy or, on a scrape, a real browser. Require JS goes straight to a browser; without it, a page that needs one still gets one. text only, no change to the fields.
 - **Map Website: every sitemap file is read whatever its own date, and a new link type.** with **Modified Since**, a sitemap file is no longer skipped because of its own lastmod: each entry is judged by its own lastmod. a sitemap file the map found to be a sitemap index now comes back as type `sitemap_index`. to map a large site in several calls, start with **Depth** 1 and **Entries** on Sitemaps.
 
