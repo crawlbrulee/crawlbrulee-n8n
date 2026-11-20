@@ -387,12 +387,13 @@ describe('Crawlbrulee node', () => {
 
 		const map = {
 			links: [
+				{ url: 'https://example.com/sitemap.xml', type: 'sitemap_index', lastmod: null },
 				{ url: 'https://example.com/sitemap-2.xml', type: 'sitemap', lastmod: null },
 				{ url: 'https://example.com/a', type: 'page', lastmod: '2026-11-01T00:00:00.000Z' },
 			],
 			response_meta: {
 				truncation: {
-					total_before_max_results: 2,
+					total_before_max_results: 3,
 					discovery_cap_reason: 'depth',
 					unread_sitemaps: ['https://example.com/sitemap-3.xml'],
 				},

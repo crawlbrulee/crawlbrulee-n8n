@@ -263,6 +263,8 @@ describe('crawlbrulee node properties', () => {
 			'pages',
 			'sitemaps',
 		]);
+		// every link type the api returns is named, so a user can tell an index from a leaf
+		expect(entries.description).toContain('sitemap_index');
 		expect(fields.find((f) => f.name === 'modifiedSince')!.type).toBe('dateTime');
 		expect(fields.find((f) => f.name === 'sitemapUrl')!.description).toContain(
 			'https://crawlbrulee.com/docs/map',

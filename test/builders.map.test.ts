@@ -98,10 +98,18 @@ describe('map fields for sitemap files', () => {
 		expect(body).not.toHaveProperty('sitemap');
 	});
 
-	it('sends depth 0, which lists the top sitemap files with Entries on Sitemaps', () => {
+	it('sends depth 0 rather than leaving it out as empty', () => {
 		expect(buildMapBody(node, 0, { url, options: { depth: 0, entries: 'sitemaps' } })).toEqual({
 			url,
 			depth: 0,
+			entries: 'sitemaps',
+		});
+	});
+
+	it('sends depth 1 with Entries on Sitemaps, which lists the top files and the files they list', () => {
+		expect(buildMapBody(node, 0, { url, options: { depth: 1, entries: 'sitemaps' } })).toEqual({
+			url,
+			depth: 1,
 			entries: 'sitemaps',
 		});
 	});

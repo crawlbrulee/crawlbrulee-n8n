@@ -518,7 +518,7 @@ export const scrapeFields: INodeProperties[] = [
 				type: 'boolean',
 				default: false,
 				description:
-					'Whether to render JavaScript in a headless browser first. Adds latency and credits.',
+					'Whether to go straight to a headless browser. Without it, a page that needs one still gets one; turn it on when you know the page needs JavaScript, to save time.',
 			},
 			zeroDataRetentionOption,
 		],

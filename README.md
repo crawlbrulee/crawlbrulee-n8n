@@ -119,22 +119,22 @@ turn on **Download Screenshot** — it's on **Scrape URL** and on **Get Scrape R
 
 ### map a site
 
-**Map Website** with only a url reads the site's top sitemap files and 2 levels of nested ones, adds the links on its home page, and returns pages. every link carries `url`, `type` (`page`, or `sitemap` for a sitemap file) and `lastmod` (the date from the sitemap, as a UTC date and time, or `null` when the sitemap gives none; always `null` for a link found on the home page). under **Options**:
+**Map Website** with only a url reads the site's top sitemap files and 2 levels of nested ones, adds the links on its home page, and returns pages. every link carries `url`, `type` (`page`; `sitemap_index` for a sitemap file the map found to be a sitemap index, one that lists other sitemap files; `sitemap` for any other sitemap file) and `lastmod` (the date from the sitemap, as a UTC date and time, or `null` when the sitemap gives none; always `null` for a link found on the home page). under **Options**:
 
 - **Max Results**: the most entries the map finds, counting only the kind set in **Entries**. 5000 by default, up to 100000. discovery stops as soon as this many are found, so a smaller value is a faster map.
-- **Entries**: Pages (the default), Sitemaps (sitemap files) or All (both).
+- **Entries**: Pages (the default), Sitemaps (sitemap files, of type `sitemap` or `sitemap_index`) or All (both).
 - **Sitemap URL**: start from this sitemap file instead of the site's top ones. it must be on the same site, or on a host the site's robots.txt names, such as a CDN.
 - **Depth**: how many levels of nested sitemaps to follow: 0 to 3, 3 by default. see [how a map reads sitemaps](https://crawlbrulee.com/docs/map/sitemaps#how-a-map-reads-sitemaps).
-- **Modified Since**: only entries whose `lastmod` is at or after this date and time. an entry with no `lastmod` is left out, and a map with this set is always fresh, so **Cache Max Age** does nothing. see [find what changed since a date](https://crawlbrulee.com/docs/map/sitemaps#find-what-changed-since-a-date). a time with no time zone is read in the workflow's time zone (its setting, else the instance's).
+- **Modified Since**: only entries whose `lastmod` is at or after this date and time. an entry with no `lastmod` is left out. every sitemap file is read whatever its own date, and each entry is judged by its own `lastmod`. with **Entries** on Sitemaps a sitemap file is returned by its own date, not by the pages in it, so use Pages to find the pages that changed. a map with this set is always fresh, so **Cache Max Age** does nothing. see [find what changed since a date](https://crawlbrulee.com/docs/map/sitemaps#find-what-changed-since-a-date). a time with no time zone is read in the workflow's time zone (its setting, else the instance's).
 - **Sitemap Only**: leave out the links found on the home page. a map with **Sitemap URL** or **Modified Since** never adds them.
 
 the site root is listed only when a sitemap lists it. when the site answers 429 (too many requests) on the Sitemap URL file, on its robots.txt or on one of its top sitemap files, the map stops with that rate limit error and costs no credits.
 
 ### map a big site in several calls
 
-a very large or deep site is mapped in several calls: list its sitemap files with **Depth** 0 and **Entries** on Sitemaps, then put each file in **Sitemap URL** in a next call. `response_meta.truncation.unread_sitemaps` names the files a call did not read whole, to read next. the full walk-through is in [map a very large or deep site in several calls](https://crawlbrulee.com/docs/map/sitemaps#map-a-very-large-or-deep-site-in-several-calls).
+a very large or deep site is mapped in several calls. first, **Depth** 1 and **Entries** on Sitemaps list the site's top sitemap files and every file they list, in one call. a listed file shows as `sitemap` until a map opens it, even when it is a sitemap index. then read each link of type `sitemap`, plus each `sitemap_index` link that is also in `response_meta.truncation.unread_sitemaps` (an index this map read only in part), with **Sitemap URL** in a next call, one file per call: the files of an index read whole are already in your list. or ask with a higher **Depth** to go deeper. the full walk-through is in [map a very large or deep site in several calls](https://crawlbrulee.com/docs/map/sitemaps#map-a-very-large-or-deep-site-in-several-calls).
 
-for example: **Map Website** with **Depth** 0 and **Entries** on Sitemaps, then **Split Out** on `links`, then **Loop Over Items**, then **Map Website** with **Sitemap URL** set to `{{ $json.url }}`.
+for example: **Map Website** with **Depth** 1 and **Entries** on Sitemaps, then **Split Out** on `links`, then **Filter** to keep each link of type `sitemap`, plus each `sitemap_index` link that is also in `unread_sitemaps` (the files of an index read whole are already in the list), then **Loop Over Items**, then **Map Website** with **Sitemap URL** set to `{{ $json.url }}`.
 
 **Max Results** was called Max URLs up to 1.1.0. a saved workflow keeps its value, which now goes to the api as `max_results` instead of the old `max_urls`. the api still returns `total_before_max_urls`, the old name of `total_before_max_results`, with the same value. both old names are removed from the api on 2027-02-01; read `total_before_max_results`.
 

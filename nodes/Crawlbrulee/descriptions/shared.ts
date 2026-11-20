@@ -14,7 +14,7 @@ export const proxyOption: INodeProperties = {
 			name: 'Auto',
 			value: 'auto',
 			description:
-				'Tries Basic first and moves to Advanced on failure. You are billed at the tier that delivered.',
+				'Starts light and steps up on its own when a site needs more: a stronger proxy or, on a scrape, a real browser. You are billed at the tier that delivered.',
 		},
 		{ name: 'Basic', value: 'basic', description: 'Basic proxy tier, lowest cost' },
 	],

@@ -46,7 +46,7 @@ export const mapFields: INodeProperties[] = [
 				typeOptions: { minValue: 0 },
 				default: 3,
 				description:
-					"How many levels of nested sitemaps to follow: 0 to 3. The default, 3, reads the site's top sitemap files and 2 levels of nested ones. With Sitemap URL, level 0 is that file, and it is read. Without it, level 0 is the list of the site's top sitemap files, which 0 returns without reading them. A sitemap index holds only sitemap files, so reading one at a low depth with Entries on Pages returns no pages.",
+					"How many levels of nested sitemaps to follow: 0 to 3. The default, 3, reads the site's top sitemap files and 2 levels of nested ones. With Sitemap URL, level 0 is that file, and it is read. Without it, level 0 is the list of the site's top sitemap files, which 0 returns without reading their entries. A top file found at one of the usual addresses can still show as sitemap_index, because finding it shows its kind. A sitemap index holds only sitemap files, so reading one at a low depth with Entries on Pages returns no pages. Depth 1 with Entries on Sitemaps lists the site's top sitemap files and every file they list, in one call. A listed file shows as sitemap until a map opens it, even when it is a sitemap index. To go deeper, read a listed file with Sitemap URL, or ask with a higher depth.",
 			},
 			{
 				displayName: 'Entries',
@@ -58,11 +58,13 @@ export const mapFields: INodeProperties[] = [
 					{
 						name: 'Sitemaps',
 						value: 'sitemaps',
-						description: 'Sitemap files, which you can read with Sitemap URL in another call',
+						description:
+							'Sitemap files, of type sitemap or sitemap_index, which you can read with Sitemap URL in another call',
 					},
 				],
 				default: 'pages',
-				description: 'What to return. Each link carries its type: page or sitemap.',
+				description:
+					'What to return. Each link carries its type: page, sitemap, or sitemap_index for a sitemap file that lists other sitemap files.',
 			},
 			{
 				displayName: 'External',
@@ -112,7 +114,7 @@ export const mapFields: INodeProperties[] = [
 				type: 'dateTime',
 				default: '',
 				description:
-					"Return only entries whose lastmod is at or after this date and time. An entry with no lastmod is left out, and so is every link found on the home page. A nested sitemap whose own lastmod is older is not read. A map with this set is always fresh, so Cache Max Age does nothing. The time is read in the workflow's time zone, unless it carries its own.",
+					"Return only entries whose lastmod is at or after this date and time. An entry with no lastmod is left out, and so is every link found on the home page. Every sitemap file is read whatever its own lastmod, and each entry is judged by its own lastmod. With Entries on Sitemaps, a sitemap file is returned by its own lastmod, not by the pages in it, so use Entries on Pages to find the pages that changed. A map with this set is always fresh, so Cache Max Age does nothing. The time is read in the workflow's time zone, unless it carries its own.",
 			},
 			{
 				displayName: 'Page',
